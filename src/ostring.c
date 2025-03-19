@@ -210,20 +210,7 @@ void reserve_str(string_t* str, size_t chars) {
     resize_str(str, chars);
 }
 
-void reverse_str(string_t* str) {
-    if (str->len < 2) {
-        return;
-    }
-
-    char* ptr = str->str;
-    size_t last = str->len - 1;
-
-    for (size_t i = 0; i < str->len / 2; ++i) {
-        char help = ptr[i];
-        ptr[i] = ptr[last - i];
-        ptr[last - i] = help;
-    }
-}
+void reverse_str(string_t* str) { reverse_cstr(str->str, str->len); }
 
 void reverse_cstr(char* str, size_t len) {
     if (len < 2) {
@@ -349,7 +336,7 @@ void str_iter_skip(str_iter_t* iter, size_t skip) {
 void str_iter_skip_whitespace(str_iter_t* iter) {
     char curr;
 
-    while ((curr = str_iter_next(iter)) && isspace(curr)) {
+    while (isspace(curr = str_iter_next(iter))) {
         continue;
     }
 
