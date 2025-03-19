@@ -285,8 +285,8 @@ void print_token(void* token) {
         case L_PAREN_T: printf("L_PAREN_T"); break;
         case R_PAREN_T: printf("R_PAREN_T"); break;
         case COMMENT_T: printf("COMMENT_T"); break;
-        case L_CURLY_T: printf("L_CURLY_T"); break;
-        case R_CURLY_T: printf("R_CURLY_T"); break;
+        // case L_CURLY_T: printf("L_CURLY_T"); break;
+        // case R_CURLY_T: printf("R_CURLY_T"); break;
     }
 }
 

@@ -53,10 +53,10 @@ AssemblyToken tokenizeSymbol(str_iter_t* iter) {
             return L_SQUARE_T;
         case ']':
             return R_SQUARE_T;
-        case '{':
-            return L_CURLY_T;
-        case '}':
-            return R_CURLY_T;
+        // case '{':
+        //     return L_CURLY_T;
+        // case '}':
+        //     return R_CURLY_T;
         case ',':
             return COMMA_T;
         case ';':
@@ -365,7 +365,8 @@ AssemblyToken tokenizeSymbol(str_iter_t* iter) {
         case 'z':
         case '_':
             str_iter_skip_label(iter);
-            return LABEL_DEF_T;
+            if (str_iter_next(iter) == ':') return LABEL_DEF_T;
+            return error;
     }
     return error;
 }

@@ -78,8 +78,8 @@ typedef enum AssemblyToken {
     R_SQUARE_T,
     L_PAREN_T,
     R_PAREN_T,
-    L_CURLY_T,
-    R_CURLY_T,
+    // L_CURLY_T,
+    // R_CURLY_T,
 } AssemblyToken;
 
 typedef struct {

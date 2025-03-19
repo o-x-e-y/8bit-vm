@@ -1,15 +1,16 @@
-; init registers with the first two fibonacci values
+; init H and L registers with the first two fibonacci values
 LOAD    0
 STORE   L
 LOAD    1
 STORE   H
 
-; init counter register we're finding fibbonacci number 5
+; init R0 as counter register
+; we're finding fibbonacci number 10
 LOAD 10
 STORE R0
 
-; Reset accumulator and add both old values to it
-fib {
+fib:
+    ; Reset accumulator and add both old values to it
     LOAD 0
     ADD L
     ADD H
@@ -21,7 +22,6 @@ fib {
     ; Decrement counter jump back to .fib (start of loop) if not zero
     DEC R0
     JNZ .fib
-}
 
 ; Load final value into the accumulator
 LOAD H
