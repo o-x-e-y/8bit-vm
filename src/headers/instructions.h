@@ -2,7 +2,6 @@
 #define __OXEY_CCE_INSTRUCTIONS_H
 
 #include <limits.h>
-#include <stdio.h>
 
 #include "common.h"
 #include "cpu.h"
@@ -181,13 +180,34 @@ INC(R1, R1)
 INC(L, L)
 INC(H, H)
 
-#define DEC(variation, src)        \
-    INSTRUCTION(DEC_##variation) { \
-        PC++;                      \
-        src--;                     \
-        UPDATE_ZF(src);            \
-        UPDATE_SF(src);            \
+INSTRUCTION(INC_HL) {
+    PC++;
+    uint16_t inc = HL + 1;
+    H = (uint8_t)(inc >> 8);
+    L = (uint8_t)(inc & 0xFF);
+    UPDATE_ZF(inc);
+    UPDATE_SF(inc);
+    UPDATE_FLAGS(inc == 0, cf);
+}
+
+#define DEC(variation, src)                 \
+    INSTRUCTION(DEC_##variation) {          \
+        PC++;                               \
+        src--;                              \
+        UPDATE_ZF(src);                     \
+        UPDATE_SF(src);                     \
+        UPDATE_FLAGS(src == UINT8_MAX, cf); \
     }
+
+INSTRUCTION(DEC_HL) {
+    PC++;
+    uint16_t dec = HL - 1;
+    H = (uint8_t)(dec >> 8);
+    L = (uint8_t)(dec & 0xFF);
+    UPDATE_ZF(dec);
+    UPDATE_SF(dec);
+    UPDATE_FLAGS(dec == UINT16_MAX, cf);
+}
 
 DEC(A, ACC)
 DEC(ML, MEMORY(L))
@@ -205,6 +225,15 @@ DEC(H, H)
         UPDATE_SF(src);            \
     }
 
+INSTRUCTION(NEG_HL) {
+    PC++;
+    uint16_t neg = -HL;
+    H = (uint8_t)(neg >> 8);
+    L = (uint8_t)(neg & 0xFF);
+    UPDATE_ZF(neg);
+    UPDATE_SF(neg);
+}
+
 NEG(A, ACC)
 NEG(ML, MEMORY(L))
 NEG(MHL, MEMORY(HL))
@@ -220,6 +249,15 @@ NEG(H, H)
         UPDATE_ZF(src);            \
         UPDATE_SF(src);            \
     }
+
+INSTRUCTION(NOT_HL) {
+    PC++;
+    uint16_t neg = ~HL;
+    H = (uint8_t)(neg >> 8);
+    L = (uint8_t)(neg & 0xFF);
+    UPDATE_ZF(neg);
+    UPDATE_SF(neg);
+}
 
 NOT(A, ACC)
 NOT(ML, MEMORY(L))
@@ -589,10 +627,10 @@ const static Instruction OP_TABLE[256] = {
     ADC_I,      ADC_A,      ADC_ML,     ADC_MHL,    ADC_R0,     ADC_R1,     ADC_L,      ADC_H,
     SUB_I,      SUB_A,      SUB_ML,     SUB_MHL,    SUB_R0,     SUB_R1,     SUB_L,      SUB_H,
     SBC_I,      SBC_A,      SBC_ML,     SBC_MHL,    SBC_R0,     SBC_R1,     SBC_L,      SBC_H,
-    unused,     INC_A,      INC_ML,     INC_MHL,    INC_R0,     INC_R1,     INC_L,      INC_H,
-    unused,     DEC_A,      DEC_ML,     DEC_MHL,    DEC_R0,     DEC_R1,     DEC_L,      DEC_H,
-    unused,     NEG_A,      NEG_ML,     NEG_MHL,    NEG_R0,     NEG_R1,     NEG_L,      NEG_H,
-    unused,     NOT_A,      NOT_ML,     NOT_MHL,    NOT_R0,     NOT_R1,     NOT_L,      NOT_H, 
+    INC_HL,     INC_A,      INC_ML,     INC_MHL,    INC_R0,     INC_R1,     INC_L,      INC_H,
+    DEC_HL,     DEC_A,      DEC_ML,     DEC_MHL,    DEC_R0,     DEC_R1,     DEC_L,      DEC_H,
+    NEG_HL,     NEG_A,      NEG_ML,     NEG_MHL,    NEG_R0,     NEG_R1,     NEG_L,      NEG_H,
+    NOT_HL,     NOT_A,      NOT_ML,     NOT_MHL,    NOT_R0,     NOT_R1,     NOT_L,      NOT_H, 
     AND_I,      AND_A,      AND_ML,     AND_MHL,    AND_R0,     AND_R1,     AND_L,      AND_H,
     OR_I,       OR_A,       OR_ML,      OR_MHL,     OR_R0,      OR_R1,      OR_L,       OR_H, 
     XOR_I,      XOR_A,      XOR_ML,     XOR_MHL,    XOR_R0,     XOR_R1,     XOR_L,      XOR_H, 
@@ -608,7 +646,7 @@ const static Instruction OP_TABLE[256] = {
     POP_A,      POP_IM,     POP_R0,     POP_R1,     POP_L,      POP_H,      POP_BP,     POP_F,
     CALL,       RET,        ENTER,      LEAVE,      LOAD_BPI,   STORE_BPI,  unused,     unused, 
     MIN_I,      unused,     MIN_ML,     MIN_MHL,    MIN_R0,     MIN_R1,     MIN_L,      MIN_H, 
-    MAX_I,      unused,     MAX_ML,     MAX_MHL,     MAX_R0,    MAX_R1,     MAX_L,      MAX_H, 
+    MAX_I,      unused,     MAX_ML,     MAX_MHL,    MAX_R0,     MAX_R1,     MAX_L,      MAX_H, 
     unused,     unused,     unused,     unused,     unused,     unused,     unused,     unused, 
     unused,     unused,     unused,     unused,     unused,     unused,     unused,     unused, 
     unused,     unused,     unused,     unused,     unused,     unused,     unused,     unused, 
@@ -680,7 +718,7 @@ typedef enum Opcode {
     OP_SBC_R1       = 0b00111101,
     OP_SBC_L        = 0b00111110,
     OP_SBC_H        = 0b00111111,
-    // OP_unused    = 0b01000000,
+    OP_INC_HL       = 0b01000000,
     OP_INC_A        = 0b01000001,
     OP_INC_ML       = 0b01000010,
     OP_INC_MHL      = 0b01000011,
@@ -688,7 +726,7 @@ typedef enum Opcode {
     OP_INC_R1       = 0b01000101,
     OP_INC_L        = 0b01000110,
     OP_INC_H        = 0b01000111,
-    // OP_unused    = 0b01001000,
+    OP_DEC_HL       = 0b01001000,
     OP_DEC_A        = 0b01001001,
     OP_DEC_ML       = 0b01001010,
     OP_DEC_MHL      = 0b01001011,
@@ -696,7 +734,7 @@ typedef enum Opcode {
     OP_DEC_R1       = 0b01001101,
     OP_DEC_L        = 0b01001110,
     OP_DEC_H        = 0b01001111,
-    // OP_unused    = 0b01010000,
+    OP_NEG_HL       = 0b01010000,
     OP_NEG_A        = 0b01010001,
     OP_NEG_ML       = 0b01010010,
     OP_NEG_MHL      = 0b01010011,
@@ -704,7 +742,7 @@ typedef enum Opcode {
     OP_NEG_R1       = 0b01010101,
     OP_NEG_L        = 0b01010110,
     OP_NEG_H        = 0b01010111,
-    // OP_unused    = 0b01011000,
+    OP_NOT_HL       = 0b01011000,
     OP_NOT_A        = 0b01011001,
     OP_NOT_ML       = 0b01011010,
     OP_NOT_MHL      = 0b01011011,
