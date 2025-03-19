@@ -9,8 +9,8 @@ The core of the system features an 8-bit CPU, similar to existing 8-bit processo
 * 64kB of memory
 * An accumulator: the result of all ALU operations are implicitly stored here
 * Four 8-bit general purpose registers:
-    - 0, 1: General purpose
-    - H, L: Used to access memory. When not used for this purpose, you can also use them as general purpose registers.
+    * 0, 1: General purpose
+    * H, L: Used to access memory. When not used for this purpose, you can also use them as general purpose registers.
 * Flags register
 * Program counter
 * Eight addressing modes
