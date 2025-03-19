@@ -63,7 +63,8 @@ int main(int argc, char** argv) {
     // printCpu(&cpu);
     // printStack(&cpu, 10);
 
-    const slice_t program = static_slice("JMP .smie      smie:     ; this is a comment \n LOAD 0 ; this is another comment    \n");
+    const slice_t program = static_slice(
+        "JMP .smie      smie:     ; this is a comment \n LOAD 0 ; this is another comment    \n");
 
     ProgramLines tokenLines = tokenizeProgram(program);
     vec_iter_t lineIter = iter_from_vec(&tokenLines.lines);

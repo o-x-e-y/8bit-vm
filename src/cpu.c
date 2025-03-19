@@ -1,9 +1,9 @@
 #include "headers/cpu.h"
 
-#include "headers/debug.h"
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "headers/debug.h"
 #include "headers/instructions.h"
 
 void initCpu(CPU* cpu) {

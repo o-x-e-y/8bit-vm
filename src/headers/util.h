@@ -3,8 +3,9 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include "ostring.h"
+
 #include "oslice.h"
+#include "ostring.h"
 
 #define VOID_PTR_ADD(ptr, offset) ((void*)((char*)(ptr) + (offset)))
 
