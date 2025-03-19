@@ -6,6 +6,7 @@
 #include "headers/debug.h"
 #include "headers/instructions.h"
 #include "headers/tokenizer.h"
+#include "headers/util.h"
 
 int main(int argc, char** argv) {
     CPU cpu;
@@ -20,7 +21,7 @@ int main(int argc, char** argv) {
         OP_LOAD_I, 1,
         OP_STORE_H,
 
-        // init counter register, we're finding fibbonacci number 5
+        // init counter register, we're finding fibbonacci number 10
         OP_LOAD_I, 10,
         OP_STORE_R0,
 
@@ -63,14 +64,15 @@ int main(int argc, char** argv) {
     // printCpu(&cpu);
     // printStack(&cpu, 10);
 
-    const slice_t program = static_slice(
-        "JMP .smie      smie:     ; this is a comment \n LOAD 0 ; this is another comment    \n");
+    const string_t programStr = read_file_to_str("./programs/fibonacci.casm");
+    const slice_t program = from_str_slice(programStr);
 
     ProgramLines tokenLines = tokenizeProgram(program);
     vec_iter_t lineIter = iter_from_vec(&tokenLines.lines);
 
     TokenLine* line;
     Token* token;
+    
     while ((line = iter_next(&lineIter))) {
         vec_iter_t tokenIter = iter_from_vec(&line->tokens);
         while ((token = iter_next(&tokenIter))) {

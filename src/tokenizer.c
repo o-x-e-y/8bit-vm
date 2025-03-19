@@ -143,7 +143,7 @@ AssemblyToken tokenizeSymbol(str_iter_t* iter) {
             switch (str_iter_next(iter)) {
                 case 'A':
                     if (str_iter_next(iter) == 'L' && str_iter_next(iter) == 'T' &&
-                        str_iter_peek(iter) == ' ')
+                        !isalnum(str_iter_peek(iter)))
                         return HALT_T;
                     return error;
                 case 'L':
@@ -371,7 +371,7 @@ AssemblyToken tokenizeSymbol(str_iter_t* iter) {
     return error;
 }
 
-TokenLine tokenizeLine(str_iter_t* iter) {
+TokenLine tokenizeLine(str_iter_t* iter, size_t lineNr) {
     str_iter_skip_space(iter);
 
     if (str_iter_peek(iter) == '\n') {
@@ -392,7 +392,7 @@ TokenLine tokenizeLine(str_iter_t* iter) {
         char* end = iter->ptr;
         slice_t substr = from_cstr_slice(start, (size_t)(end - start));
 
-        Token tok = (Token){.substr = substr, .tok = atok};
+        Token tok = (Token){.substr = substr, .tok = atok, .lineNr = lineNr };
         push_vec(&res, &tok);
 
         str_iter_skip_space(iter);  // skip spaces until potential newline
@@ -403,18 +403,20 @@ TokenLine tokenizeLine(str_iter_t* iter) {
 
 ProgramLines tokenizeProgram(slice_t program) {
     vec_t res = new_vec(10, sizeof(TokenLine));
+    size_t lineNr = 0;
     char p;
 
-    str_iter_t iter = iter_from_slice(&program);
+    str_iter_t iter = iter_from_slice(program);
 
     while (str_iter_peek(&iter)) {
         str_iter_skip_whitespace(&iter);
 
-        TokenLine line = tokenizeLine(&iter);
+        TokenLine line = tokenizeLine(&iter, lineNr);
 
         if (line.tokens.len > 0) {
             push_vec(&res, &line);
         }
+        ++lineNr;
     }
 
     return (ProgramLines){.lines = res};

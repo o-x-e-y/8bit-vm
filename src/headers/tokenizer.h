@@ -85,6 +85,7 @@ typedef enum AssemblyToken {
 typedef struct {
     AssemblyToken tok;
     slice_t substr;
+    size_t lineNr;
 } Token;
 
 typedef struct {
@@ -96,7 +97,7 @@ typedef struct {
 } ProgramLines;
 
 AssemblyToken tokenizeSymbol(str_iter_t* iter);
-TokenLine tokenizeLine(str_iter_t* iter);
+TokenLine tokenizeLine(str_iter_t* iter, size_t lineNr);
 ProgramLines tokenizeProgram(slice_t program);
 
 #endif
