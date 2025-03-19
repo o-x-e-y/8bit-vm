@@ -7,5 +7,6 @@
 void printOpcode(Opcode op);
 void printCpu(CPU* cpu);
 void printStack(CPU* cpu, uint8_t size);
+void print_token(void* token);
 
 #endif

@@ -2,6 +2,8 @@
 
 #include <stdio.h>
 
+#include "headers/tokenizer.h"
+
 // clang-format off
 
 void printOpcode(Opcode op) {
@@ -202,6 +204,89 @@ void printOpcode(Opcode op) {
         case OP_LEAVE: printf("LEAVE"); break;
         case OP_LOAD_BPI: printf("LOAD_BPI"); break;
         case OP_STORE_BPI: printf("STORE_BPI"); break;
+        case OP_INC_HL: printf("OP_INC_HL"); break;
+        case OP_DEC_HL: printf("OP_DEC_HL"); break;
+        case OP_NEG_HL: printf("OP_NEG_HL"); break;
+        case OP_NOT_HL: printf("OP_NOT_HL"); break;
+    }
+}
+
+void print_token(void* token) {
+    Token* tok = (Token*)token;
+    
+    switch (tok->tok) {
+        case NOOP_T: printf("NOOP_T"); break;
+        case HALT_T: printf("HALT_T"); break;
+        case EI_T: printf("EI_T"); break;
+        case DI_T: printf("DI_T"); break;
+        case ET_T: printf("ET_T"); break;
+        case DT_T: printf("DT_T"); break;
+        case CLRA_T: printf("CLRA_T"); break;
+        case RESET_T: printf("RESET_T"); break;
+        case LOAD_T: printf("LOAD_T"); break;
+        case STORE_T: printf("STORE_T"); break;
+        case XCH_T: printf("XCH_T"); break;
+        case ADD_T: printf("ADD_T"); break;
+        case ADC_T: printf("ADC_T"); break;
+        case SUB_T: printf("SUB_T"); break;
+        case SBC_T: printf("SBC_T"); break;
+        case INC_T: printf("INC_T"); break;
+        case DEC_T: printf("DEC_T"); break;
+        case NEG_T: printf("NEG_T"); break;
+        case NOT_T: printf("NOT_T"); break;
+        case AND_T: printf("AND_T"); break;
+        case OR_T: printf("OR_T"); break;
+        case XOR_T: printf("XOR_T"); break;
+        case SHL_T: printf("SHL_T"); break;
+        case SHR_T: printf("SHR_T"); break;
+        case ROL_T: printf("ROL_T"); break;
+        case ROR_T: printf("ROR_T"); break;
+        case ADDW_T: printf("ADDW_T"); break;
+        case SUBW_T: printf("SUBW_T"); break;
+        case MULW_T: printf("MULW_T"); break;
+        case DIVW_T: printf("DIVW_T"); break;
+        case JMP_T: printf("JMP_T"); break;
+        case JZ_T: printf("JZ_T"); break;
+        case JNZ_T: printf("JNZ_T"); break;
+        case JC_T: printf("JC_T"); break;
+        case JNC_T: printf("JNC_T"); break;
+        case JEXT_T: printf("JEXT_T"); break;
+        case CMP_T: printf("CMP_T"); break;
+        case PUSH_T: printf("PUSH_T"); break;
+        case POP_T: printf("POP_T"); break;
+        case CALL_T: printf("CALL_T"); break;
+        case RET_T: printf("RET_T"); break;
+        case ENTER_T: printf("ENTER_T"); break;
+        case LEAVE_T: printf("LEAVE_T"); break;
+        case MIN_T: printf("MIN_T"); break;
+        case MAX_T: printf("MAX_T"); break;
+        case ACC_T: printf("ACC_T"); break;
+        case R0_T: printf("R0_T"); break;
+        case R1_T: printf("R1_T"); break;
+        case H_T: printf("H_T"); break;
+        case L_T: printf("L_T"); break;
+        case HL_T: printf("HL_T"); break;
+        case SP_T: printf("SP_T"); break;
+        case BP_T: printf("BP_T"); break;
+        case PC_T: printf("PC_T"); break;
+        case FLAGS_T: printf("FLAGS_T"); break;
+        case COMMA_T: printf("COMMA_T"); break;
+        case LABEL_REF_T: printf("LABEL_REF_T"); break;
+        case LABEL_DEF_T: printf("LABEL_DEF_T"); break;
+        case UNKNOWN_T: printf("UNKNOWN_T"); break;
+        case INTEGER_T: printf("INTEGER_T"); break;
+        case BINARY_T: printf("BINARY_T"); break;
+        case OCTAL_T: printf("OCTAL_T"); break;
+        case HEXADECIMAL_T: printf("HEXADECIMAL_T"); break;
+        case PLUS_T: printf("PLUS_T"); break;
+        case MINUS_T: printf("MINUS_T"); break;
+        case L_SQUARE_T: printf("L_SQUARE_T"); break;
+        case R_SQUARE_T: printf("R_SQUARE_T"); break;
+        case L_PAREN_T: printf("L_PAREN_T"); break;
+        case R_PAREN_T: printf("R_PAREN_T"); break;
+        case COMMENT_T: printf("COMMENT_T"); break;
+        case L_CURLY_T: printf("L_CURLY_T"); break;
+        case R_CURLY_T: printf("R_CURLY_T"); break;
     }
 }
 
