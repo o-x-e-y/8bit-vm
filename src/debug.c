@@ -221,7 +221,6 @@ void print_token(void* token) {
         case DI_T: printf("DI_T"); break;
         case ET_T: printf("ET_T"); break;
         case DT_T: printf("DT_T"); break;
-        case CLRA_T: printf("CLRA_T"); break;
         case RESET_T: printf("RESET_T"); break;
         case LOAD_T: printf("LOAD_T"); break;
         case STORE_T: printf("STORE_T"); break;
@@ -271,8 +270,10 @@ void print_token(void* token) {
         case PC_T: printf("PC_T"); break;
         case FLAGS_T: printf("FLAGS_T"); break;
         case COMMA_T: printf("COMMA_T"); break;
+        case QUOTED_BYTES_T: printf("QUOTED_BYTES_T"); break;
         case LABEL_REF_T: printf("LABEL_REF_T"); break;
         case LABEL_DEF_T: printf("LABEL_DEF_T"); break;
+        case LABEL_IDX_T: printf("LABEL_IDX_T"); break;
         case UNKNOWN_T: printf("UNKNOWN_T"); break;
         case INTEGER_T: printf("INTEGER_T"); break;
         case BINARY_T: printf("BINARY_T"); break;
@@ -285,8 +286,8 @@ void print_token(void* token) {
         case L_PAREN_T: printf("L_PAREN_T"); break;
         case R_PAREN_T: printf("R_PAREN_T"); break;
         case COMMENT_T: printf("COMMENT_T"); break;
-        // case L_CURLY_T: printf("L_CURLY_T"); break;
-        // case R_CURLY_T: printf("R_CURLY_T"); break;
+        case L_CURLY_T: printf("L_CURLY_T"); break;
+        case R_CURLY_T: printf("R_CURLY_T"); break;
     }
 }
 

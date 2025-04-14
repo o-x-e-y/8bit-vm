@@ -12,7 +12,6 @@ typedef enum AssemblyToken {
     DI_T,
     ET_T,
     DT_T,
-    CLRA_T,
     RESET_T,
     LOAD_T,
     STORE_T,
@@ -51,6 +50,7 @@ typedef enum AssemblyToken {
     LEAVE_T,
     MIN_T,
     MAX_T,
+
     ACC_T,
     R0_T,
     R1_T,
@@ -63,8 +63,10 @@ typedef enum AssemblyToken {
     FLAGS_T,
 
     COMMA_T,
+    QUOTED_BYTES_T,
     LABEL_REF_T,
     LABEL_DEF_T,
+    LABEL_IDX_T,
     COMMENT_T,
     UNKNOWN_T,
 
@@ -78,12 +80,12 @@ typedef enum AssemblyToken {
     R_SQUARE_T,
     L_PAREN_T,
     R_PAREN_T,
-    // L_CURLY_T,
-    // R_CURLY_T,
+    L_CURLY_T,
+    R_CURLY_T,
 } AssemblyToken;
 
 typedef struct {
-    AssemblyToken tok;
+    TokenSymbol tok;
     slice_t substr;
     size_t lineNr;
 } Token;
@@ -96,8 +98,6 @@ typedef struct {
     vec_t lines;
 } ProgramLines;
 
-AssemblyToken tokenizeSymbol(str_iter_t* iter);
-TokenLine tokenizeLine(str_iter_t* iter, size_t lineNr);
-ProgramLines tokenizeProgram(slice_t program);
+TokenSymbol tokenizeSymbol(str_iter_t* iter);
 
 #endif

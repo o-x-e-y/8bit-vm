@@ -36,8 +36,14 @@ static void str_iter_skip_label(str_iter_t* iter) {
     }
 }
 
-AssemblyToken tokenizeSymbol(str_iter_t* iter) {
-    AssemblyToken error = UNKNOWN_T;
+static void str_iter_skip_until_doublequotes(str_iter_t* iter) {
+    char p;
+    while ((p = str_iter_peek(iter)) && p != '"') {
+        str_iter_next(iter);
+    }
+    str_iter_next(iter); // skip final doublequote
+}
+
 
     /// Partially generated using trie-gen: https://www.nongnu.org/trie-gen/
     switch (str_iter_next(iter)) {
@@ -53,12 +59,15 @@ AssemblyToken tokenizeSymbol(str_iter_t* iter) {
             return L_SQUARE_T;
         case ']':
             return R_SQUARE_T;
-        // case '{':
-        //     return L_CURLY_T;
-        // case '}':
-        //     return R_CURLY_T;
+        case '{':
+            return L_CURLY_T;
+        case '}':
+            return R_CURLY_T;
         case ',':
             return COMMA_T;
+        case '"':
+            str_iter_skip_until_doublequotes(iter);
+            return QUOTED_BYTES_T;
         case ';':
             str_iter_skip_comment(iter);
             return COMMENT_T;
@@ -365,8 +374,13 @@ AssemblyToken tokenizeSymbol(str_iter_t* iter) {
         case 'z':
         case '_':
             str_iter_skip_label(iter);
-            if (str_iter_next(iter) == ':') return LABEL_DEF_T;
-            return error;
+            if (str_iter_peek(iter) == ':') {
+                str_iter_next(iter);
+                return LABEL_DEF_T;
+            }
+            if (str_iter_peek(iter) == '[') {
+                return LABEL_IDX_T;
+            }
     }
     return error;
 }
@@ -385,20 +399,23 @@ TokenLine tokenizeLine(str_iter_t* iter, size_t lineNr) {
     while ((p = str_iter_peek(iter)) && p != '\n') {
         str_iter_skip_space(iter);
 
-        char* start = iter->ptr;
+        const char* start = iter->ptr;
 
-        AssemblyToken atok = tokenizeSymbol(iter);
+        TokenSymbol symbol = tokenizeSymbol(iter);
 
-        char* end = iter->ptr;
-        slice_t substr = from_cstr_slice(start, (size_t)(end - start));
+        const char* end = iter->ptr;
+        const slice_t substr = from_cstr_slice(start, (size_t)(end - start));
+        const size_t char_nr = (size_t)(start - line_start);
 
-        Token tok = (Token){.substr = substr, .tok = atok, .lineNr = lineNr };
+        Token tok = (Token){.substr = substr, .tok = symbol, .char_nr = char_nr};
         push_vec(&res, &tok);
 
         str_iter_skip_space(iter);  // skip spaces until potential newline
     }
 
-    return (TokenLine){.tokens = res};
+    slice_t substr = from_cstr_slice(line_start, (size_t)(iter->ptr - line_start));
+
+    return (TokenLine){.tokens = res, .substr = substr, .line_nr = line_nr};
 }
 
 ProgramLines tokenizeProgram(slice_t program) {
