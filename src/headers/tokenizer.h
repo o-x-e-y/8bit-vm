@@ -103,5 +103,16 @@ typedef struct {
 void freeTokenLine(void* tokenLine);
 void freeTokenLines(void* tokenLines);
 TokenSymbol tokenizeSymbol(str_iter_t* iter);
+TokenLine tokenizeLine(str_iter_t* iter, size_t line_nr);
+TokenLines tokenizeProgram(slice_t program);
+
+bool is_token_op(TokenSymbol token);
+bool is_token_addr(TokenSymbol token);
+bool is_token_comma(TokenSymbol token);
+bool is_token_comment(TokenSymbol token);
+bool is_token_label_ref(TokenSymbol token);
+bool is_token_label_def(TokenSymbol token);
+bool is_token_immediate(TokenSymbol token);
+bool is_token_unknown(TokenSymbol token);
 
 #endif

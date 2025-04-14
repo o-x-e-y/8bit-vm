@@ -407,7 +407,9 @@ TokenSymbol tokenizeSymbol(str_iter_t* iter) {
     return unknown(iter);
 }
 
-TokenLine tokenizeLine(str_iter_t* iter, size_t lineNr) {
+TokenLine tokenizeLine(str_iter_t* iter, size_t line_nr) {
+    const char* line_start = iter->ptr;
+
     str_iter_skip_space(iter);
 
     if (str_iter_peek(iter) == '\n') {
@@ -471,3 +473,99 @@ void freeTokenLines(void* tokenLines) {
         free_vec(&t->lines, freeTokenLine);
     }
 }
+
+bool is_token_op(TokenSymbol token) {
+    switch (token) {
+        case NOOP_T:
+        case HALT_T:
+        case EI_T:
+        case DI_T:
+        case ET_T:
+        case DT_T:
+        case RESET_T:
+        case LOAD_T:
+        case STORE_T:
+        case XCH_T:
+        case ADD_T:
+        case ADC_T:
+        case SUB_T:
+        case SBC_T:
+        case INC_T:
+        case DEC_T:
+        case NEG_T:
+        case NOT_T:
+        case AND_T:
+        case OR_T:
+        case XOR_T:
+        case SHL_T:
+        case SHR_T:
+        case ROL_T:
+        case ROR_T:
+        case ADDW_T:
+        case SUBW_T:
+        case MULW_T:
+        case DIVW_T:
+        case JMP_T:
+        case JZ_T:
+        case JNZ_T:
+        case JC_T:
+        case JNC_T:
+        case JEXT_T:
+        case CMP_T:
+        case PUSH_T:
+        case POP_T:
+        case CALL_T:
+        case RET_T:
+        case ENTER_T:
+        case LEAVE_T:
+        case MIN_T:
+        case MAX_T:
+            return true;
+        default:
+            return false;
+    }
+
+    return false;
+}
+
+bool is_token_addr(TokenSymbol token) {
+    switch (token) {
+        case ACC_T:
+        case R0_T:
+        case R1_T:
+        case H_T:
+        case L_T:
+        case HL_T:
+        case SP_T:
+        case BP_T:
+        case PC_T:
+        case FLAGS_T:
+        case L_SQUARE_T:
+        case L_PAREN_T:
+            return true;
+        default:
+            return false;
+    }
+}
+
+bool is_token_comma(TokenSymbol token) { return token == COMMA_T; }
+
+bool is_token_comment(TokenSymbol token) { return token == COMMENT_T; }
+
+bool is_token_label_ref(TokenSymbol token) { return token == LABEL_REF_T; }
+
+bool is_token_label_def(TokenSymbol token) { return token == LABEL_DEF_T; }
+
+bool is_token_immediate(TokenSymbol token) {
+    switch (token) {
+        case INTEGER_T:
+        case BINARY_T:
+        case OCTAL_T:
+        case HEXADECIMAL_T:
+            return true;
+        default:
+            return false;
+    }
+}
+
+bool is_token_unknown(TokenSymbol token) { return token == UNKNOWN_T; }
