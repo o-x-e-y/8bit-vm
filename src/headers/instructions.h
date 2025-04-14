@@ -3,7 +3,6 @@
 
 #include <limits.h>
 
-#include "common.h"
 #include "cpu.h"
 
 #define INSTRUCTION_WIDTH 8
@@ -37,56 +36,57 @@ INSTRUCTION(CLRA) {
 }
 INSTRUCTION(RESET) { resetCpu(cpu); }
 
-#define LOAD(variation, src)        \
-    INSTRUCTION(LOAD_##variation) { \
-        PC++;                       \
-        ACC = src;                  \
-        UPDATE_ZF(ACC);             \
-        UPDATE_SF(ACC);             \
-    }
-
-LOAD(I, MEMORY(PC++))
-LOAD(IMHL, MEMORY((((uint16_t)MEMORY(PC++) << 8) | (uint16_t)MEMORY(PC++)) + HL))
-LOAD(ML, MEMORY(L))
-LOAD(MHL, (MEMORY(HL)))
-LOAD(R0, R0)
-LOAD(R1, R1)
-LOAD(L, L)
-LOAD(H, H)
-
-#define STORE(variation, dest)       \
-    INSTRUCTION(STORE_##variation) { \
-        PC++;                        \
-        dest = ACC;                  \
+#define LOAD(variation, pc_inc, src) \
+    INSTRUCTION(LOAD_##variation) {  \
+        pc_inc;                      \
+        ACC = src;                   \
         UPDATE_ZF(ACC);              \
         UPDATE_SF(ACC);              \
     }
 
-STORE(IM, MEMORY(((uint16_t)MEMORY(PC++) << 8) | (uint16_t)MEMORY(PC++)))
-STORE(IMHL, MEMORY((((uint16_t)MEMORY(PC++) << 8) | (uint16_t)MEMORY(PC++)) + HL))
-STORE(ML, MEMORY(L))
-STORE(MHL, MEMORY(HL))
-STORE(R0, R0)
-STORE(R1, R1)
-STORE(L, L)
-STORE(H, H)
+LOAD(I, PC += 2, MEMORY(PC - 1))
+LOAD(IMHL, PC += 3, MEMORY((((uint16_t)MEMORY(PC - 2) << 8) | (uint16_t)MEMORY(PC - 1)) + HL))
+LOAD(ML, PC += 1, MEMORY(L))
+LOAD(MHL, PC += 1, (MEMORY(HL)))
+LOAD(R0, PC += 1, R0)
+LOAD(R1, PC += 1, R1)
+LOAD(L, PC += 1, L)
+LOAD(H, PC += 1, H)
 
-#define XCH(variation, src)        \
-    INSTRUCTION(XCH_##variation) { \
-        PC++;                      \
-        uint8_t help = ACC;        \
-        ACC = src;                 \
-        src = help;                \
-        UPDATE_ZF(ACC);            \
-        UPDATE_SF(ACC);            \
+#define STORE(variation, pc_inc, dest) \
+    INSTRUCTION(STORE_##variation) {   \
+        pc_inc;                        \
+        dest = ACC;                    \
+        UPDATE_ZF(ACC);                \
+        UPDATE_SF(ACC);                \
     }
 
-XCH(ML, MEMORY(L))
-XCH(MHL, MEMORY(HL))
-XCH(R0, R0)
-XCH(R1, R1)
-XCH(L, L)
-XCH(H, H)
+STORE(IM, PC += 3, MEMORY(((uint16_t)MEMORY(PC - 2) << 8) | (uint16_t)MEMORY(PC - 1)))
+STORE(IMHL, PC += 3, MEMORY((((uint16_t)MEMORY(PC - 2) << 8) | (uint16_t)MEMORY(PC - 1)) + HL))
+STORE(ML, PC += 1, MEMORY(L))
+STORE(MHL, PC += 1, MEMORY(HL))
+STORE(R0, PC += 1, R0)
+STORE(R1, PC += 1, R1)
+STORE(L, PC += 1, L)
+STORE(H, PC += 1, H)
+
+#define XCH(variation, pc_inc, src) \
+    INSTRUCTION(XCH_##variation) {  \
+        pc_inc;                     \
+        uint8_t help = ACC;         \
+        ACC = src;                  \
+        src = help;                 \
+        UPDATE_ZF(ACC);             \
+        UPDATE_SF(ACC);             \
+    }
+
+XCH(IMHL, PC += 3, MEMORY((((uint16_t)MEMORY(PC - 2) << 8) | (uint16_t)MEMORY(PC - 1)) + HL))
+XCH(ML, PC += 1, MEMORY(L))
+XCH(MHL, PC += 1, MEMORY(HL))
+XCH(R0, PC += 1, R0)
+XCH(R1, PC += 1, R1)
+XCH(L, PC += 1, L)
+XCH(H, PC += 1, H)
 
 #define ADD(variation, src)          \
     INSTRUCTION(ADD_##variation) {   \
@@ -99,7 +99,7 @@ XCH(H, H)
     }
 
 ADD(I, MEMORY(PC++))
-ADD(A, ACC)
+ADD(ACC, ACC)
 ADD(ML, MEMORY(L))
 ADD(MHL, MEMORY(HL))
 ADD(R0, R0)
@@ -118,7 +118,7 @@ ADD(H, H)
     }
 
 ADC(I, MEMORY(PC++))
-ADC(A, ACC)
+ADC(ACC, ACC)
 ADC(ML, MEMORY(L))
 ADC(MHL, MEMORY(HL))
 ADC(R0, R0)
@@ -129,14 +129,15 @@ ADC(H, H)
 #define SUB(variation, src)          \
     INSTRUCTION(SUB_##variation) {   \
         PC++;                        \
-        ACC -= src;                  \
+        uint8_t val = src;           \
+        ACC -= val;                  \
         UPDATE_ZF(ACC);              \
         UPDATE_SF(ACC);              \
-        UPDATE_FLAGS(ACC > src, cf); \
+        UPDATE_FLAGS(ACC > val, cf); \
     }
 
 SUB(I, MEMORY(PC++))
-SUB(A, ACC)
+SUB(ACC, ACC)
 SUB(ML, MEMORY(L))
 SUB(MHL, MEMORY(HL))
 SUB(R0, R0)
@@ -155,7 +156,7 @@ SUB(H, H)
     }
 
 SBC(I, MEMORY(PC++))
-SBC(A, ACC)
+SBC(ACC, ACC)
 SBC(ML, MEMORY(L))
 SBC(MHL, MEMORY(HL))
 SBC(R0, R0)
@@ -172,7 +173,7 @@ SBC(H, H)
         UPDATE_FLAGS(src == 0, cf); \
     }
 
-INC(A, ACC)
+INC(ACC, ACC)
 INC(ML, MEMORY(L))
 INC(MHL, MEMORY(HL))
 INC(R0, R0)
@@ -209,7 +210,7 @@ INSTRUCTION(DEC_HL) {
     UPDATE_FLAGS(dec == UINT16_MAX, cf);
 }
 
-DEC(A, ACC)
+DEC(ACC, ACC)
 DEC(ML, MEMORY(L))
 DEC(MHL, MEMORY(HL))
 DEC(R0, R0)
@@ -234,7 +235,7 @@ INSTRUCTION(NEG_HL) {
     UPDATE_SF(neg);
 }
 
-NEG(A, ACC)
+NEG(ACC, ACC)
 NEG(ML, MEMORY(L))
 NEG(MHL, MEMORY(HL))
 NEG(R0, R0)
@@ -259,7 +260,7 @@ INSTRUCTION(NOT_HL) {
     UPDATE_SF(neg);
 }
 
-NOT(A, ACC)
+NOT(ACC, ACC)
 NOT(ML, MEMORY(L))
 NOT(MHL, MEMORY(HL))
 NOT(R0, R0)
@@ -276,7 +277,7 @@ NOT(H, H)
     }
 
 AND(I, MEMORY(PC++))
-AND(A, ACC)
+AND(ACC, ACC)
 AND(ML, MEMORY(L))
 AND(MHL, MEMORY(HL))
 AND(R0, R0)
@@ -293,7 +294,7 @@ AND(H, H)
     }
 
 OR(I, MEMORY(PC++))
-OR(A, ACC)
+OR(ACC, ACC)
 OR(ML, MEMORY(L))
 OR(MHL, MEMORY(HL))
 OR(R0, R0)
@@ -310,7 +311,7 @@ OR(H, H)
     }
 
 XOR(I, MEMORY(PC++))
-XOR(A, ACC)
+XOR(ACC, ACC)
 XOR(ML, MEMORY(L))
 XOR(MHL, MEMORY(HL))
 XOR(R0, R0)
@@ -386,89 +387,79 @@ ROR(R1, R1)
 ROR(L, L)
 ROR(H, H)
 
-#define SWAP(variation, src)                         \
-    INSTRUCTION(SWAP_##variation) {                  \
-        PC++;                                        \
-        uint8_t val = src;                           \
-        src = (val & 0x0F) << 4 | (val & 0xF0) >> 4; \
-        UPDATE_ZF(src);                              \
-        UPDATE_SF(src);                              \
+/* #define SWAP(variation, src)                         \
+//     INSTRUCTION(SWAP_##variation) {                  \
+//         PC++;                                        \
+//         uint8_t val = src;                           \
+//         src = (val & 0x0F) << 4 | (val & 0xF0) >> 4; \
+//         UPDATE_ZF(src);                              \
+//         UPDATE_SF(src);                              \
+//     }
+
+// SWAP(ACC, ACC)
+// SWAP(ML, MEMORY(L))
+// SWAP(MHL, MEMORY(HL))
+// SWAP(R0, R0)
+// SWAP(R1, R1)
+// SWAP(L, L)
+// SWAP(H, H) */
+
+#define OPW(opname, op, pc_inc, variation, src)    \
+    INSTRUCTION(opname##_##variation) {            \
+        pc_inc;                                    \
+        const uint16_t val = HL op(uint16_t)(src); \
+        H = (uint8_t)(val >> 8);                   \
+        L = (uint8_t)(val & 0xFF);                 \
+        UPDATE_FLAGS(H == 0 && L == 0, zf);        \
+        UPDATE_FLAGS(H &SIGN_BIT, sf);             \
     }
 
-SWAP(A, ACC)
-SWAP(ML, MEMORY(L))
-SWAP(MHL, MEMORY(HL))
-SWAP(R0, R0)
-SWAP(R1, R1)
-SWAP(L, L)
-SWAP(H, H)
+OPW(ADDW, +, PC += 3, I, ((uint16_t)MEMORY(PC - 2) << 8) | (uint16_t)MEMORY(PC - 1))
+OPW(ADDW, +, PC += 1, ACC, ACC)
+OPW(ADDW, +, PC += 1, R0, R0)
+OPW(ADDW, +, PC += 1, R1, R1)
 
-#define OPW(opname, op, variation, src)     \
-    INSTRUCTION(opname##_##variation) {     \
-        PC++;                               \
-        const uint16_t val = HL op src;     \
-        H = (uint8_t)(val >> 8);            \
-        L = (uint8_t)(val & 0xFF);          \
-        UPDATE_FLAGS(H == 0 && L == 0, zf); \
-        UPDATE_FLAGS(H &SIGN_BIT, sf);      \
-    }
+OPW(SUBW, -, PC += 3, I, ((uint16_t)MEMORY(PC - 2) << 8) | (uint16_t)MEMORY(PC - 1))
+OPW(SUBW, -, PC += 1, ACC, ACC)
+OPW(SUBW, -, PC += 1, R0, R0)
+OPW(SUBW, -, PC += 1, R1, R1)
 
-OPW(ADDW, +, I, MEMORY(PC++))
-OPW(ADDW, +, A, ACC)
-OPW(ADDW, +, R0, R0)
-OPW(ADDW, +, R1, R1)
+OPW(MULW, *, PC += 3, I, ((uint16_t)MEMORY(PC - 2) << 8) | (uint16_t)MEMORY(PC - 1))
+OPW(MULW, *, PC += 1, ACC, ACC)
+OPW(MULW, *, PC += 1, R0, R0)
+OPW(MULW, *, PC += 1, R1, R1)
 
-OPW(SUBW, -, I, MEMORY(PC++))
-OPW(SUBW, -, A, ACC)
-OPW(SUBW, -, R0, R0)
-OPW(SUBW, -, R1, R1)
-
-OPW(MULW, *, I, MEMORY(PC++))
-OPW(MULW, *, A, ACC)
-OPW(MULW, *, R0, R0)
-OPW(MULW, *, R1, R1)
-
-OPW(DIVW, /, I, MEMORY(PC++))
-OPW(DIVW, /, A, ACC)
-OPW(DIVW, /, R0, R0)
-OPW(DIVW, /, R1, R1)
+OPW(DIVW, /, PC += 3, I, ((uint16_t)MEMORY(PC - 2) << 8) | (uint16_t)MEMORY(PC - 1))
+OPW(DIVW, /, PC += 1, ACC, ACC)
+OPW(DIVW, /, PC += 1, R0, R0)
+OPW(DIVW, /, PC += 1, R1, R1)
 
 INSTRUCTION(JMP) {
-    PC++;
-    PC = ((uint16_t)MEMORY(PC++) << 8) | ((uint16_t)MEMORY(PC++));
+    PC += 3;
+    PC = ((uint16_t)MEMORY(PC - 2) << 8) | ((uint16_t)MEMORY(PC - 1));
 }
 INSTRUCTION(JIHL) {
-    PC++;
-    PC = (((uint16_t)MEMORY(PC++) << 8) | ((uint16_t)MEMORY(PC++))) + HL;
+    PC += 3;
+    PC = (((uint16_t)MEMORY(PC - 2) << 8) | ((uint16_t)MEMORY(PC - 1))) + HL;
 }
 INSTRUCTION(JHL) { PC = HL; }
 INSTRUCTION(JZ) {
-    PC++;
-    if (get_zf(FLAGS))
-        PC = ((uint16_t)MEMORY(PC++) << 8) | ((uint16_t)MEMORY(PC++));
-    else
-        PC += 2;
+    PC += 3;
+    if (get_zf(FLAGS)) PC = ((uint16_t)MEMORY(PC - 2) << 8) | ((uint16_t)MEMORY(PC - 1));
 }
 INSTRUCTION(JNZ) {
-    PC++;
-    if (!get_zf(FLAGS))
-        PC = ((uint16_t)MEMORY(PC++) << 8) | ((uint16_t)MEMORY(PC++));
-    else
-        PC += 2;
+    PC += 3;
+    if (!get_zf(FLAGS)) {
+        PC = ((uint16_t)MEMORY(PC - 2) << 8) | ((uint16_t)MEMORY(PC - 1));
+    }
 }
 INSTRUCTION(JC) {
-    PC++;
-    if (get_cf(FLAGS))
-        PC = ((uint16_t)MEMORY(PC++) << 8) | (uint16_t)MEMORY(PC++);
-    else
-        PC += 2;
+    PC += 3;
+    if (get_cf(FLAGS)) PC = ((uint16_t)MEMORY(PC - 2) << 8) | (uint16_t)MEMORY(PC - 1);
 }
 INSTRUCTION(JNC) {
-    PC++;
-    if (!get_cf(FLAGS))
-        PC = ((uint16_t)MEMORY(PC++) << 8) | ((uint16_t)MEMORY(PC++));
-    else
-        PC += 2;
+    PC += 3;
+    if (!get_cf(FLAGS)) PC = ((uint16_t)MEMORY(PC - 2) << 8) | ((uint16_t)MEMORY(PC - 1));
 }
 INSTRUCTION(JEXT) {
     PC++;
@@ -504,7 +495,7 @@ INSTRUCTION(JEXT) {
     }
 
 CMP(I, MEMORY(PC++))
-CMP(A, ACC)
+CMP(ACC, ACC)
 CMP(ML, MEMORY(L))
 CMP(MHL, MEMORY(HL))
 CMP(R0, R0)
@@ -521,44 +512,44 @@ CMP(H, H)
         UPDATE_SF(val);             \
     }
 
-PUSH(A, ACC)
 PUSH(I, MEMORY(PC++))
+PUSH(ACC, ACC)
 PUSH(R0, R0)
 PUSH(R1, R1)
 PUSH(L, L)
 PUSH(H, H)
 PUSH(BP, BP);
-PUSH(F, FLAGS);
+PUSH(FLAGS, FLAGS);
 
-#define POP(variation, dest)       \
-    INSTRUCTION(POP_##variation) { \
-        PC++;                      \
-        uint8_t val = STACK(--SP); \
-        dest = val;                \
-        UPDATE_ZF(val);            \
-        UPDATE_SF(val);            \
+#define POP(variation, pc_inc, dest) \
+    INSTRUCTION(POP_##variation) {   \
+        pc_inc;                      \
+        uint8_t val = STACK(--SP);   \
+        dest = val;                  \
+        UPDATE_ZF(val);              \
+        UPDATE_SF(val);              \
     }
 
-POP(A, ACC)
-POP(IM, MEMORY(((uint16_t)MEMORY(PC++) << 8) | (uint16_t)MEMORY(PC++)))
-POP(R0, R0)
-POP(R1, R1)
-POP(L, L)
-POP(H, H)
-POP(BP, BP);
-POP(F, FLAGS);
+POP(ACC, PC += 1, ACC)
+POP(IM, PC += 3, MEMORY(((uint16_t)MEMORY(PC - 2) << 8) | (uint16_t)MEMORY(PC - 1)))
+POP(R0, PC += 1, R0)
+POP(R1, PC += 1, R1)
+POP(L, PC += 1, L)
+POP(H, PC += 1, H)
+POP(BP, PC += 1, BP);
+POP(FLAGS, PC += 1, FLAGS);
 
 INSTRUCTION(CALL) {
-    PC++;
-    uint16_t addr = ((uint16_t)MEMORY(PC++) << 8) | (uint16_t)MEMORY(PC++);
+    PC += 3;
+    uint16_t addr = ((uint16_t)MEMORY(PC - 2) << 8) | (uint16_t)MEMORY(PC - 1);
     STACK(SP++) = (uint8_t)(PC >> 8);
     STACK(SP++) = (uint8_t)(PC);
     PC = addr;
 }
 INSTRUCTION(RET) {
-    uint8_t low = (uint16_t)STACK(--SP);
-    uint8_t high = (uint16_t)STACK(--SP);
-    PC = low | (high << 8);
+    uint16_t low = (uint16_t)STACK(--SP);
+    uint16_t high = (uint16_t)STACK(--SP);
+    PC = (high << 8) | low;
 }
 INSTRUCTION(ENTER) {
     PC++;
@@ -572,8 +563,8 @@ INSTRUCTION(LEAVE) {
     BP = STACK(--SP);
     SP = BP;
 }
-LOAD(BPI, STACK(BP - MEMORY(PC++)))
-STORE(BPI, STACK(BP - MEMORY(PC++)))
+LOAD(BPI, PC += 2, STACK(BP - MEMORY(PC - 1)))
+STORE(BPI, PC += 2, STACK(BP - MEMORY(PC - 1)))
 
 #define MIN(variation, src)        \
     INSTRUCTION(MIN_##variation) { \
@@ -586,7 +577,6 @@ STORE(BPI, STACK(BP - MEMORY(PC++)))
     }
 
 MIN(I, MEMORY(PC++))
-
 MIN(ML, MEMORY(L))
 MIN(MHL, MEMORY(HL))
 MIN(R0, R0)
@@ -605,7 +595,6 @@ MIN(H, H)
     }
 
 MAX(I, MEMORY(PC++))
-
 MAX(ML, MEMORY(L))
 MAX(MHL, MEMORY(HL))
 MAX(R0, R0)
@@ -622,28 +611,28 @@ const static Instruction OP_TABLE[256] = {
     NOOP,       HALT,       EI,         DI,         ET,         DT,         CLRA,       RESET, 
     LOAD_I,     LOAD_IMHL,  LOAD_ML,    LOAD_MHL,   LOAD_R0,    LOAD_R1,    LOAD_L,     LOAD_H,
     STORE_IM,   STORE_IMHL, STORE_ML,   STORE_MHL,  STORE_R0,   STORE_R1,   STORE_L,    STORE_H,
-    unused,     unused,     XCH_ML,     XCH_MHL,    XCH_R0,     XCH_R1,     XCH_L,      XCH_H,
-    ADD_I,      ADD_A,      ADD_ML,     ADD_MHL,    ADD_R0,     ADD_R1,     ADD_L,      ADD_H,
-    ADC_I,      ADC_A,      ADC_ML,     ADC_MHL,    ADC_R0,     ADC_R1,     ADC_L,      ADC_H,
-    SUB_I,      SUB_A,      SUB_ML,     SUB_MHL,    SUB_R0,     SUB_R1,     SUB_L,      SUB_H,
-    SBC_I,      SBC_A,      SBC_ML,     SBC_MHL,    SBC_R0,     SBC_R1,     SBC_L,      SBC_H,
-    INC_HL,     INC_A,      INC_ML,     INC_MHL,    INC_R0,     INC_R1,     INC_L,      INC_H,
-    DEC_HL,     DEC_A,      DEC_ML,     DEC_MHL,    DEC_R0,     DEC_R1,     DEC_L,      DEC_H,
-    NEG_HL,     NEG_A,      NEG_ML,     NEG_MHL,    NEG_R0,     NEG_R1,     NEG_L,      NEG_H,
-    NOT_HL,     NOT_A,      NOT_ML,     NOT_MHL,    NOT_R0,     NOT_R1,     NOT_L,      NOT_H, 
-    AND_I,      AND_A,      AND_ML,     AND_MHL,    AND_R0,     AND_R1,     AND_L,      AND_H,
-    OR_I,       OR_A,       OR_ML,      OR_MHL,     OR_R0,      OR_R1,      OR_L,       OR_H, 
-    XOR_I,      XOR_A,      XOR_ML,     XOR_MHL,    XOR_R0,     XOR_R1,     XOR_L,      XOR_H, 
+    unused,     XCH_IMHL,   XCH_ML,     XCH_MHL,    XCH_R0,     XCH_R1,     XCH_L,      XCH_H,
+    ADD_I,      ADD_ACC,    ADD_ML,     ADD_MHL,    ADD_R0,     ADD_R1,     ADD_L,      ADD_H,
+    ADC_I,      ADC_ACC,    ADC_ML,     ADC_MHL,    ADC_R0,     ADC_R1,     ADC_L,      ADC_H,
+    SUB_I,      SUB_ACC,    SUB_ML,     SUB_MHL,    SUB_R0,     SUB_R1,     SUB_L,      SUB_H,
+    SBC_I,      SBC_ACC,    SBC_ML,     SBC_MHL,    SBC_R0,     SBC_R1,     SBC_L,      SBC_H,
+    INC_HL,     INC_ACC,    INC_ML,     INC_MHL,    INC_R0,     INC_R1,     INC_L,      INC_H,
+    DEC_HL,     DEC_ACC,    DEC_ML,     DEC_MHL,    DEC_R0,     DEC_R1,     DEC_L,      DEC_H,
+    NEG_HL,     NEG_ACC,    NEG_ML,     NEG_MHL,    NEG_R0,     NEG_R1,     NEG_L,      NEG_H,
+    NOT_HL,     NOT_ACC,    NOT_ML,     NOT_MHL,    NOT_R0,     NOT_R1,     NOT_L,      NOT_H, 
+    AND_I,      AND_ACC,    AND_ML,     AND_MHL,    AND_R0,     AND_R1,     AND_L,      AND_H,
+    OR_I,       OR_ACC,     OR_ML,      OR_MHL,     OR_R0,      OR_R1,      OR_L,       OR_H, 
+    XOR_I,      XOR_ACC,    XOR_ML,     XOR_MHL,    XOR_R0,     XOR_R1,     XOR_L,      XOR_H, 
     SHL_I,      unused,     SHL_ML,     SHL_MHL,    SHL_R0,     SHL_R1,     SHL_L,      SHL_H,
     SHR_I,      unused,     SHR_ML,     SHR_MHL,    SHR_R0,     SHR_R1,     SHR_L,      SHR_H,
     ROL_I,      unused,     ROL_ML,     ROL_MHL,    ROL_R0,     ROL_R1,     ROL_L,      ROL_H,
     ROR_I,      unused,     ROR_ML,     ROR_MHL,    ROR_R0,     ROR_R1,     ROR_L,      ROR_H,
-    ADDW_I,     ADDW_A,     ADDW_R0,    ADDW_R1,    SUBW_I,     SUBW_A,     SUBW_R0,    SUBW_R1,
-    MULW_I,     MULW_A,     MULW_R0,    MULW_R1,    DIVW_I,     DIVW_A,     DIVW_R0,    DIVW_R1,
+    ADDW_I,     ADDW_ACC,   ADDW_R0,    ADDW_R1,    SUBW_I,     SUBW_ACC,   SUBW_R0,    SUBW_R1,
+    MULW_I,     MULW_ACC,   MULW_R0,    MULW_R1,    DIVW_I,     DIVW_ACC,   DIVW_R0,    DIVW_R1,
     JMP,        JIHL,       JHL,        JZ,         JNZ,        JC,         JNC,        JEXT,
-    CMP_I,      CMP_A,      CMP_ML,     CMP_MHL,    CMP_R0,     CMP_R1,     CMP_L,      CMP_H,
-    PUSH_A,     PUSH_I,     PUSH_R0,    PUSH_R1,    PUSH_L,     PUSH_H,     PUSH_BP,    PUSH_F,
-    POP_A,      POP_IM,     POP_R0,     POP_R1,     POP_L,      POP_H,      POP_BP,     POP_F,
+    CMP_I,      CMP_ACC,    CMP_ML,     CMP_MHL,    CMP_R0,     CMP_R1,     CMP_L,      CMP_H,
+    PUSH_I,     PUSH_ACC,   PUSH_R0,    PUSH_R1,    PUSH_L,     PUSH_H,     PUSH_BP,    PUSH_FLAGS,
+    POP_IM,     POP_ACC,    POP_R0,     POP_R1,     POP_L,      POP_H,      POP_BP,     POP_FLAGS,
     CALL,       RET,        ENTER,      LEAVE,      LOAD_BPI,   STORE_BPI,  unused,     unused, 
     MIN_I,      unused,     MIN_ML,     MIN_MHL,    MIN_R0,     MIN_R1,     MIN_L,      MIN_H, 
     MAX_I,      unused,     MAX_ML,     MAX_MHL,    MAX_R0,     MAX_R1,     MAX_L,      MAX_H, 
@@ -687,7 +676,7 @@ typedef enum Opcode {
     OP_XCH_L        = 0b00011110,
     OP_XCH_H        = 0b00011111,
     OP_ADD_I        = 0b00100000,
-    OP_ADD_A        = 0b00100001,
+    OP_ADD_ACC      = 0b00100001,
     OP_ADD_ML       = 0b00100010,
     OP_ADD_MHL      = 0b00100011,
     OP_ADD_R0       = 0b00100100,
@@ -695,7 +684,7 @@ typedef enum Opcode {
     OP_ADD_L        = 0b00100110,
     OP_ADD_H        = 0b00100111,
     OP_ADC_I        = 0b00101000,
-    OP_ADC_A        = 0b00101001,
+    OP_ADC_ACC      = 0b00101001,
     OP_ADC_ML       = 0b00101010,
     OP_ADC_MHL      = 0b00101011,
     OP_ADC_R0       = 0b00101100,
@@ -703,7 +692,7 @@ typedef enum Opcode {
     OP_ADC_L        = 0b00101110,
     OP_ADC_H        = 0b00101111,
     OP_SUB_I        = 0b00110000,
-    OP_SUB_A        = 0b00110001,
+    OP_SUB_ACC      = 0b00110001,
     OP_SUB_ML       = 0b00110010,
     OP_SUB_MHL      = 0b00110011,
     OP_SUB_R0       = 0b00110100,
@@ -711,7 +700,7 @@ typedef enum Opcode {
     OP_SUB_L        = 0b00110110,
     OP_SUB_H        = 0b00110111,
     OP_SBC_I        = 0b00111000,
-    OP_SBC_A        = 0b00111001,
+    OP_SBC_ACC      = 0b00111001,
     OP_SBC_ML       = 0b00111010,
     OP_SBC_MHL      = 0b00111011,
     OP_SBC_R0       = 0b00111100,
@@ -719,7 +708,7 @@ typedef enum Opcode {
     OP_SBC_L        = 0b00111110,
     OP_SBC_H        = 0b00111111,
     OP_INC_HL       = 0b01000000,
-    OP_INC_A        = 0b01000001,
+    OP_INC_ACC      = 0b01000001,
     OP_INC_ML       = 0b01000010,
     OP_INC_MHL      = 0b01000011,
     OP_INC_R0       = 0b01000100,
@@ -727,7 +716,7 @@ typedef enum Opcode {
     OP_INC_L        = 0b01000110,
     OP_INC_H        = 0b01000111,
     OP_DEC_HL       = 0b01001000,
-    OP_DEC_A        = 0b01001001,
+    OP_DEC_ACC      = 0b01001001,
     OP_DEC_ML       = 0b01001010,
     OP_DEC_MHL      = 0b01001011,
     OP_DEC_R0       = 0b01001100,
@@ -735,7 +724,7 @@ typedef enum Opcode {
     OP_DEC_L        = 0b01001110,
     OP_DEC_H        = 0b01001111,
     OP_NEG_HL       = 0b01010000,
-    OP_NEG_A        = 0b01010001,
+    OP_NEG_ACC      = 0b01010001,
     OP_NEG_ML       = 0b01010010,
     OP_NEG_MHL      = 0b01010011,
     OP_NEG_R0       = 0b01010100,
@@ -743,7 +732,7 @@ typedef enum Opcode {
     OP_NEG_L        = 0b01010110,
     OP_NEG_H        = 0b01010111,
     OP_NOT_HL       = 0b01011000,
-    OP_NOT_A        = 0b01011001,
+    OP_NOT_ACC      = 0b01011001,
     OP_NOT_ML       = 0b01011010,
     OP_NOT_MHL      = 0b01011011,
     OP_NOT_R0       = 0b01011100,
@@ -751,7 +740,7 @@ typedef enum Opcode {
     OP_NOT_L        = 0b01011110,
     OP_NOT_H        = 0b01011111,
     OP_AND_I        = 0b01100000,
-    OP_AND_A        = 0b01100001,
+    OP_AND_ACC      = 0b01100001,
     OP_AND_ML       = 0b01100010,
     OP_AND_MHL      = 0b01100011,
     OP_AND_R0       = 0b01100100,
@@ -759,7 +748,7 @@ typedef enum Opcode {
     OP_AND_L        = 0b01100110,
     OP_AND_H        = 0b01100111,
     OP_OR_I         = 0b01101000,
-    OP_OR_A         = 0b01101001,
+    OP_OR_ACC       = 0b01101001,
     OP_OR_ML        = 0b01101010,
     OP_OR_MHL       = 0b01101011,
     OP_OR_R0        = 0b01101100,
@@ -767,7 +756,7 @@ typedef enum Opcode {
     OP_OR_L         = 0b01101110,
     OP_OR_H         = 0b01101111,
     OP_XOR_I        = 0b01110000,
-    OP_XOR_A        = 0b01110001,
+    OP_XOR_ACC      = 0b01110001,
     OP_XOR_ML       = 0b01110010,
     OP_XOR_MHL      = 0b01110011,
     OP_XOR_R0       = 0b01110100,
@@ -807,19 +796,19 @@ typedef enum Opcode {
     OP_ROR_L        = 0b10010110,
     OP_ROR_H        = 0b10010111,
     OP_ADDW_I       = 0b10011000,
-    OP_ADDW_A       = 0b10011001,
+    OP_ADDW_ACC     = 0b10011001,
     OP_ADDW_R0      = 0b10011010,
     OP_ADDW_R1      = 0b10011011,
     OP_SUBW_I       = 0b10011100,
-    OP_SUBW_A       = 0b10011101,
+    OP_SUBW_ACC     = 0b10011101,
     OP_SUBW_R0      = 0b10011110,
     OP_SUBW_R1      = 0b10011111,
     OP_MULW_I       = 0b10100000,
-    OP_MULW_A       = 0b10100001,
+    OP_MULW_ACC     = 0b10100001,
     OP_MULW_R0      = 0b10100010,
     OP_MULW_R1      = 0b10100011,
     OP_DIVW_I       = 0b10100100,
-    OP_DIVW_A       = 0b10100101,
+    OP_DIVW_ACC     = 0b10100101,
     OP_DIVW_R0      = 0b10100110,
     OP_DIVW_R1      = 0b10100111,
     OP_JMP          = 0b10101000,
@@ -831,29 +820,29 @@ typedef enum Opcode {
     OP_JNC          = 0b10101110,
     OP_JEXT         = 0b10101111,
     OP_CMP_I        = 0b10110000,
-    OP_CMP_A        = 0b10110001,
+    OP_CMP_ACC      = 0b10110001,
     OP_CMP_ML       = 0b10110010,
     OP_CMP_MHL      = 0b10110011,
     OP_CMP_R0       = 0b10110100,
     OP_CMP_R1       = 0b10110101,
     OP_CMP_L        = 0b10110110,
     OP_CMP_H        = 0b10110111,
-    OP_PUSH_A       = 0b10111000,
-    OP_PUSH_I       = 0b10111001,
+    OP_PUSH_I       = 0b10111000,
+    OP_PUSH_ACC     = 0b10111001,
     OP_PUSH_R0      = 0b10111010,
     OP_PUSH_R1      = 0b10111011,
     OP_PUSH_L       = 0b10111100,
     OP_PUSH_H       = 0b10111101,
     OP_PUSH_BP      = 0b10111110,
-    OP_PUSH_F       = 0b10111111,
-    OP_POP_A        = 0b11000000,
-    OP_POP_IM       = 0b11000001,
+    OP_PUSH_FLAGS   = 0b10111111,
+    OP_POP_IM       = 0b11000000,
+    OP_POP_ACC      = 0b11000001,
     OP_POP_R0       = 0b11000010,
     OP_POP_R1       = 0b11000011,
     OP_POP_L        = 0b11000100,
     OP_POP_H        = 0b11000101,
     OP_POP_BP       = 0b11000110,
-    OP_POP_F        = 0b11000111,
+    OP_POP_FLAGS    = 0b11000111,
     OP_CALL         = 0b11001000,
     OP_RET          = 0b11001001,
     OP_ENTER        = 0b11001010,
@@ -862,22 +851,22 @@ typedef enum Opcode {
     OP_STORE_BPI    = 0b11001101,
     // OP_unused    = 0b11001110,
     // OP_unused    = 0b11001111,
-    // OP_unused    = 0b11010000,
+    OP_MIN_I        = 0b11010000,
     // OP_unused    = 0b11010001,
-    // OP_unused    = 0b11010010,
-    // OP_unused    = 0b11010011,
-    // OP_unused    = 0b11010100,
-    // OP_unused    = 0b11010101,
-    // OP_unused    = 0b11010110,
-    // OP_unused    = 0b11010111,
-    // OP_unused    = 0b11011000,
+    OP_MIN_ML       = 0b11010010,
+    OP_MIN_MHL      = 0b11010011,
+    OP_MIN_R0       = 0b11010100,
+    OP_MIN_R1       = 0b11010101,
+    OP_MIN_L        = 0b11010110,
+    OP_MIN_H        = 0b11010111,
+    OP_MAX_I        = 0b11011000,
     // OP_unused    = 0b11011001,
-    // OP_unused    = 0b11011010,
-    // OP_unused    = 0b11011011,
-    // OP_unused    = 0b11011100,
-    // OP_unused    = 0b11011101,
-    // OP_unused    = 0b11011110,
-    // OP_unused    = 0b11011111,
+    OP_MAX_ML       = 0b11011010,
+    OP_MAX_MHL      = 0b11011011,
+    OP_MAX_R0       = 0b11011100,
+    OP_MAX_R1       = 0b11011101,
+    OP_MAX_L        = 0b11011110,
+    OP_MAX_H        = 0b11011111,
     // OP_unused    = 0b11100000,
     // OP_unused    = 0b11100001,
     // OP_unused    = 0b11100010,
