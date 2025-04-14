@@ -412,7 +412,7 @@ TokenLine tokenizeLine(str_iter_t* iter, size_t lineNr) {
 
     if (str_iter_peek(iter) == '\n') {
         str_iter_next(iter);
-        return (TokenLine){.tokens = new_vec(0, sizeof(Token))};
+        return (TokenLine){0};
     }
 
     vec_t res = new_vec(10, sizeof(Token));
