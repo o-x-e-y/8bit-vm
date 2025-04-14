@@ -1,7 +1,7 @@
 #ifndef __OXEY_CCE_FLAGS_H
 #define __OXEY_CCE_FLAGS_H
 
-#include "common.h"
+#include <stdint.h>
 
 #define CF_BIT 0x01
 #define AF_BIT 0x02
