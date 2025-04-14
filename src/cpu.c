@@ -52,7 +52,7 @@ int runCpu(CPU* cpu) {
             printCpu(cpu);
             printStack(cpu, SP + 5);
             printf("Next opcode: ");
-            printOpcode(MEMORY(PC));
+            printNextOperation(&MEMORY(PC));
             printf("\n");
             getchar();
         }
