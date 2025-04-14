@@ -457,3 +457,17 @@ TokenLines tokenizeProgram(slice_t program) {
 
     return (TokenLines){.lines = res};
 }
+
+void freeTokenLine(void* tokenLine) {
+    if (tokenLine != NULL) {
+        TokenLine* line = tokenLine;
+        free_vec(&line->tokens, NULL);
+    }
+}
+
+void freeTokenLines(void* tokenLines) {
+    if (tokenLines != NULL) {
+        TokenLines* t = tokenLines;
+        free_vec(&t->lines, freeTokenLine);
+    }
+}

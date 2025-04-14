@@ -100,6 +100,8 @@ typedef struct {
     vec_t lines;
 } TokenLines;
 
+void freeTokenLine(void* tokenLine);
+void freeTokenLines(void* tokenLines);
 TokenSymbol tokenizeSymbol(str_iter_t* iter);
 
 #endif
