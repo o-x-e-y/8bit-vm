@@ -7,7 +7,7 @@
 #define static_slice(str) from_cstr_slice(str, strlen(str))
 
 typedef struct {
-    const size_t len;
+    size_t len;
     const char* str;
 } slice_t;
 
