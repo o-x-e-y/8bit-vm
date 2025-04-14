@@ -82,21 +82,23 @@ typedef enum AssemblyToken {
     R_PAREN_T,
     L_CURLY_T,
     R_CURLY_T,
-} AssemblyToken;
+} TokenSymbol;
 
 typedef struct {
     TokenSymbol tok;
     slice_t substr;
-    size_t lineNr;
+    size_t char_nr;
 } Token;
 
 typedef struct {
     vec_t tokens;
+    slice_t substr;
+    size_t line_nr;
 } TokenLine;
 
 typedef struct {
     vec_t lines;
-} ProgramLines;
+} TokenLines;
 
 TokenSymbol tokenizeSymbol(str_iter_t* iter);
 

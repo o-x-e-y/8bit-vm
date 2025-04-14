@@ -440,16 +440,13 @@ TokenLine tokenizeLine(str_iter_t* iter, size_t lineNr) {
     return (TokenLine){.tokens = res, .substr = substr, .line_nr = line_nr};
 }
 
-ProgramLines tokenizeProgram(slice_t program) {
+TokenLines tokenizeProgram(slice_t program) {
     vec_t res = new_vec(10, sizeof(TokenLine));
     size_t lineNr = 0;
-    char p;
 
     str_iter_t iter = iter_from_slice(program);
 
     while (str_iter_peek(&iter)) {
-        str_iter_skip_whitespace(&iter);
-
         TokenLine line = tokenizeLine(&iter, lineNr);
 
         if (line.tokens.len > 0) {
@@ -458,5 +455,5 @@ ProgramLines tokenizeProgram(slice_t program) {
         ++lineNr;
     }
 
-    return (ProgramLines){.lines = res};
+    return (TokenLines){.lines = res};
 }
