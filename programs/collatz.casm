@@ -1,0 +1,41 @@
+ET
+
+LOAD 123
+STORE L
+
+collatz:
+    INC R0
+    
+    LOAD L
+    AND 1
+    CMP 0               ; odd/even check: if number is zero, sets zero flag
+    JZ .handle_num_even
+    
+    CALL .num_odd       ; num is odd by this point
+    JMP .continue
+    
+    handle_num_even:
+        CALL .num_even
+        
+    continue:
+    
+    LOAD H
+    CMP 0
+    JNZ .collatz
+    
+    LOAD L
+    CMP 1
+    JNZ .collatz
+    
+LOAD R0
+
+HALT
+    
+num_even:
+    DIVW 2
+    RET
+    
+num_odd:
+    MULW 3
+    ADDW 1
+    RET

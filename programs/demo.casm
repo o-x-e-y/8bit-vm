@@ -1,0 +1,7 @@
+LOAD 10
+ADD 10
+STOREE R0
+HALT
+
+static:
+    12345

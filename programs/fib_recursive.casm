@@ -1,0 +1,55 @@
+; recursive fibonacci implementation
+; calling convention: `nth_fib`'s argument is passed in R1, and its return value is also in R1.
+
+; ET
+
+LOAD 24
+STORE L
+
+CALL .nth_fib
+
+; HL now contains the 24th fibonacci number
+
+HALT
+
+nth_fib:
+    LOAD H
+    CMP 0           ; check if H is 0
+    JNZ .n_case     ; if it's not, there's no point in checking if L is zero or one for that matter
+    LOAD L
+    CMP 0           ; check if L is 0
+    JNZ .one_case   ; if it's not, we can check if it's one, knowing H is zero from above
+    RET             ; if L is zero, we want to return 0 in L so we don't have to do anything.
+    
+one_case:
+    CMP 1           ; the accumulator already contains L so we can check if it's 1 immediately
+    JNZ .n_case     ; go to the n case if L >= 1
+    RET             ; L already contains 1, so the return value is 1. We don't have to do anything
+    
+n_case:
+    PUSH H
+    PUSH L          ; tmp storage of HL to use later
+    DEC HL          ; n - 1
+    CALL .nth_fib   ; call function with n-1
+    
+    POP ACC         
+    POP R0          ; return value is in HL, pop old L into accumulator and old H into R0
+    
+    PUSH H
+    PUSH L          ; tmp storage of return value of first call
+    
+    STORE L
+    LOAD R0
+    STORE H         ; move L and H return values from the accumulator and R0 into L and H
+    
+    SUBW 2          ; n - 2 is now in HL
+    CALL .nth_fib   ; call function with n - 2
+    
+    POP ACC         ; HL now contains fib(n-2), pop lower byte of fib(n-1) into accumulator
+    ADD L           ; add lower bytes, activates the carry flag which we need for the higher bytes
+    STORE L         ; store final calculated byte in L
+    POP ACC         ; pop higher byte of fib(n-1) into accumulator
+    ADC H           ; add higher bytes + carry bit if the lower bytes are > 256
+    STORE H         ; store final calculated byte in H
+    RET             ; HL now contains the return value of the whole function
+    

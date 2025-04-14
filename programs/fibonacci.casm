@@ -1,3 +1,5 @@
+ET
+
 ; init H and L registers with the first two fibonacci values
 LOAD    0
 STORE   L

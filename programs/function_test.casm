@@ -1,0 +1,18 @@
+ET  ; enable trap flag
+    
+LOAD 3
+STORE R0
+LOAD 5
+STORE R1
+
+CALL .add_r0_r1
+
+STORE L
+
+HALT
+
+add_r0_r1:
+    LOAD R0
+    ADD R1
+    ; STORE R0
+    RET

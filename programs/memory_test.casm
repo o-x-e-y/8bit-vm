@@ -1,0 +1,15 @@
+LOAD 4
+STORE R0
+
+loop:
+    ; 1 + 16 - 16 = 1
+    ; first load is `12`
+    LOAD label[1 + HL + 0x10 - 16]
+    INC HL
+    DEC R0      ; 
+    JNZ .loop
+
+HALT
+
+label:
+    1 12 123 1234
