@@ -7,7 +7,7 @@ headers := ./src/headers
 
 debug-flags := -g -O0 -Wall
 release-flags := -O3
-valgrind-flags := --leak-check=yes --track-origins=yes -s
+valgrind-flags := --leak-check=yes --track-origins=yes -s --leak-check=full --show-leak-kinds=all
 
 src_files := $(wildcard $(src)/*.c)
 
