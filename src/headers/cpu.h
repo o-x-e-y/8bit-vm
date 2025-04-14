@@ -1,11 +1,11 @@
 #ifndef __OXEY_CCE_CPU_H
 #define __OXEY_CCE_CPU_H
 
-#include "common.h"
 #include "flags.h"
 
-#define STACK_SIZE 256
+#define STACK_SIZE 256U
 #define MEMORY_SIZE 256 * 256
+#define PROGRAM_START 256U
 #define SIGN_BIT 0b10000000
 
 #define PC cpu->program_counter
@@ -14,7 +14,7 @@
 #define R1 cpu->registers.reg_1
 #define H cpu->registers.reg_H
 #define L cpu->registers.reg_L
-#define HL (((uint16_t)H << 8) | (uint16_t)(L))
+#define HL (((uint16_t)H << 8) | ((uint16_t)(L)))
 #define FLAGS cpu->flags
 #define MODIFY_FLAG(func) FLAGS = func(FLAGS)
 #define UPDATE_FLAGS(cmp, flag)        \

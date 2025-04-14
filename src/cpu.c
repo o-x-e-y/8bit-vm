@@ -7,7 +7,7 @@
 #include "headers/instructions.h"
 
 void initCpu(CPU* cpu) {
-    PC = 0;
+    PC = PROGRAM_START;
     FLAGS = 0;
     ACC = 0;
     R0 = 0;
@@ -15,6 +15,7 @@ void initCpu(CPU* cpu) {
     H = 0;
     L = 0;
     SP = 0;
+    BP = 0;
 
     for (int i = 0; i < STACK_SIZE; ++i) {
         STACK(i) = 0;
@@ -30,7 +31,7 @@ void initCpu(CPU* cpu) {
 }
 
 void freeCpu(CPU* cpu) {
-    if (cpu->memory != NULL) {
+    if (cpu != NULL && cpu->memory != NULL) {
         free(cpu->memory);
     }
 }
