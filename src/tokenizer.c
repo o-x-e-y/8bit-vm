@@ -55,7 +55,7 @@ static void str_iter_skip_until_doublequotes(str_iter_t* iter) {
     while ((p = str_iter_peek(iter)) && p != '"') {
         str_iter_next(iter);
     }
-    str_iter_next(iter); // skip final doublequote
+    str_iter_next(iter);  // skip final doublequote
 }
 
 static TokenSymbol unknown(str_iter_t* iter) {

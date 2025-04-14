@@ -2,7 +2,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "headers/assembler.h"
 #include "headers/cpu.h"
@@ -75,7 +74,7 @@ int main(int argc, char** argv) {
         }
         printf("\n");
     }
-    
+
     const Executable exec = assemble(program);
 
     printf("created executable with size %lu\n", exec.size);

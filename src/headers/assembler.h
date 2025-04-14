@@ -8,27 +8,6 @@
 #include "tokenizer.h"
 
 typedef enum {
-    UNKNOWN_TOKEN_E,
-    UNEXPECTED_TOKEN_E,
-    OP_DOESNT_USE_OPERAND_E,
-    UNEXPECTED_EOL_E,
-    EXPECTED_COMMA_E,
-    EXPECTED_OPERATOR_E,
-    UNDEFINED_LABEL_E,
-    NONMATCHING_CLOSING_PAREN_E,
-    EXPECTED_EXPR_OP_E,
-    EXPECTED_EXPR_E,
-    MULTIPLE_MEMORY_E,
-    // EXPECTED_PLUS_MINUS_E,
-    // UNEXPECTED_OPERATION_E,
-    // UNEXPECTED_OPERAND_E
-} ParserError;
-
-typedef enum {
-    U8_OVERFLOW_W,
-} ParserWarning;
-
-typedef enum {
     PLUS_EOP = PLUS_T,
     MINUS_EOP = MINUS_T,
 } ExprOperator;
