@@ -327,16 +327,33 @@ void printCpu(CPU* cpu) {
 }
 
 void printStack(CPU* cpu, uint8_t size) {
+    size_t sp_string_idx = 1;
+
     printf("[");
     if (size > 0) {
-        for (size_t i = 0; i < size - 1; ++i) {
+        for (uint8_t i = 0; i < size - 1; ++i) {
             printf("%u, ", STACK(i));
+
+            if (i >= SP) continue;
+
+            if (STACK(i) < 10) {
+                sp_string_idx += 3;
+            } else if (STACK(i) < 100) {
+                sp_string_idx += 4;
+            } else {
+                sp_string_idx += 5;
+            }
         }
-        if (size < 255) {
-            printf("%u, ...", STACK(size - 1));
-        } else {
-            printf("%u", STACK(size - 1));
-        }
+        // if (size == 255) {
+        printf("%u", STACK(size - 1));
+        // } else {
+        //     printf("%u, ...", STACK(size - 1));
+        // }
     }
     printf("]\n");
+
+    for (size_t i = 0; i < sp_string_idx; ++i) {
+        printf(" ");
+    }
+    printf("^ SP\n");
 }

@@ -50,7 +50,7 @@ int runCpu(CPU* cpu) {
     while (stepCpu(cpu) != OP_HALT) {
         if (get_tf(FLAGS)) {
             printCpu(cpu);
-            printStack(cpu, 20);
+            printStack(cpu, SP + 5);
             printf("Next opcode: ");
             printOpcode(MEMORY(PC));
             printf("\n");
