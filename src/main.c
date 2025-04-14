@@ -1,7 +1,10 @@
 // #include "headers/assembler.h"
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
+#include "headers/assembler.h"
 #include "headers/cpu.h"
 #include "headers/debug.h"
 #include "headers/instructions.h"
@@ -15,8 +18,9 @@ int main(int argc, char** argv) {
     // clang-format off
 
     uint8_t fibonacci[] = {
+        OP_ET,
         // init registers with the first two fibonacci values
-        OP_LOAD_I, 0,
+        OP_CLRA, // OP_LOAD_I, 0,
         OP_STORE_L,
         OP_LOAD_I, 1,
         OP_STORE_H,
@@ -26,7 +30,7 @@ int main(int argc, char** argv) {
         OP_STORE_R0,
 
         // Reset accumulator and add both old values to it
-        OP_LOAD_I, 0,
+        OP_CLRA, // OP_LOAD_I, 0,
         OP_ADD_L,
         OP_ADD_H,
 
@@ -44,17 +48,6 @@ int main(int argc, char** argv) {
         OP_HALT
     };
 
-    uint8_t test[] = {
-        OP_ET,
-        OP_PUSH_I, 5,
-        OP_PUSH_I, 3,
-        OP_CALL, 0, 9,
-        OP_HALT,
-        OP_ENTER, 4,
-        OP_LEAVE,
-        OP_RET,
-    };
-
     // clang-format on
 
     // loadProgram(&cpu, fibonacci, sizeof(fibonacci));
@@ -64,26 +57,41 @@ int main(int argc, char** argv) {
     // printCpu(&cpu);
     // printStack(&cpu, 10);
 
-    const string_t programStr = read_file_to_str("./programs/fibonacci.casm");
+    const string_t programStr = read_file_to_str("./programs/collatz.casm");
     const slice_t program = from_str_slice(programStr);
 
-    ProgramLines tokenLines = tokenizeProgram(program);
+    TokenLines tokenLines = tokenizeProgram(program);
     vec_iter_t lineIter = iter_from_vec(&tokenLines.lines);
 
     TokenLine* line;
     Token* token;
-    
+
     while ((line = iter_next(&lineIter))) {
         vec_iter_t tokenIter = iter_from_vec(&line->tokens);
         while ((token = iter_next(&tokenIter))) {
             printf("tok: ");
-            print_token(token);
-            printf(", str: %.*s, len: %lu\n", (int)token->substr.len, token->substr.str,
-                   token->substr.len);
+            printToken(token);
+            printf(", \"%.*s\"\n", (int)token->substr.len, token->substr.str);
         }
         printf("\n");
     }
+    
+    const Executable exec = assemble(program);
 
+    printf("created executable with size %lu\n", exec.size);
+
+    loadProgram(&cpu, exec.executable, exec.size);
+
+    runCpu(&cpu);
+
+    printCpu(&cpu);
+    printStack(&cpu, 10);
+
+    freeTokenLines(&tokenLines);
+
+    free(exec.executable);
+    free_str((string_t*)&programStr);
     freeCpu(&cpu);
+
     return 0;
 }
