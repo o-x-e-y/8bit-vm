@@ -1,9 +1,23 @@
 #include "headers/tokenizer.h"
 
 #include <ctype.h>
+#include <stdio.h>
 
 #include "headers/ostring.h"
 #include "headers/ovec.h"
+
+static bool istokdelim(char c) {
+    switch (c) {
+        case ' ':
+        case '\0':
+        case '\t':
+        case '\n':
+        case EOF:
+            return true;
+        default:
+            return false;
+    }
+}
 
 static void str_iter_skip_space(str_iter_t* iter) {
     char p;
@@ -31,7 +45,7 @@ static void str_iter_skip_number(str_iter_t* iter) {
 
 static void str_iter_skip_label(str_iter_t* iter) {
     char p;
-    while ((p = tolower(str_iter_peek(iter))) && (islower(p) || p == '_')) {
+    while ((p = tolower(str_iter_peek(iter))) && (islower(p) || isdigit(p) || p == '_')) {
         str_iter_next(iter);
     }
 }
@@ -44,6 +58,17 @@ static void str_iter_skip_until_doublequotes(str_iter_t* iter) {
     str_iter_next(iter); // skip final doublequote
 }
 
+static TokenSymbol unknown(str_iter_t* iter) {
+    char p;
+    while ((p = str_iter_peek(iter)) && isalnum(p)) {
+        str_iter_next(iter);
+    }
+
+    return UNKNOWN_T;
+}
+
+TokenSymbol tokenizeSymbol(str_iter_t* iter) {
+    // TokenSymbol error = UNKNOWN_T;
 
     /// Partially generated using trie-gen: https://www.nongnu.org/trie-gen/
     switch (str_iter_next(iter)) {
@@ -77,186 +102,181 @@ static void str_iter_skip_until_doublequotes(str_iter_t* iter) {
         case 'A':
             switch (str_iter_next(iter)) {
                 case 'C':
-                    if (str_iter_next(iter) == 'C' && str_iter_peek(iter) == ' ') return ACC_T;
-                    return error;
+                    if (str_iter_next(iter) == 'C' && istokdelim(str_iter_peek(iter))) return ACC_T;
+                    return unknown(iter);
                 case 'D':
                     switch (str_iter_next(iter)) {
                         case 'C':
-                            if (str_iter_peek(iter) == ' ') return ADC_T;
-                            return error;
+                            if (istokdelim(str_iter_peek(iter))) return ADC_T;
+                            return unknown(iter);
                         case 'D':
-                            if (str_iter_peek(iter) == ' ') return ADD_T;
-                            if (str_iter_next(iter) == 'W' && str_iter_peek(iter) == ' ')
+                            if (istokdelim(str_iter_peek(iter))) return ADD_T;
+                            if (str_iter_next(iter) == 'W' && istokdelim(str_iter_peek(iter)))
                                 return ADDW_T;
                     }
-                    return error;
+                    return unknown(iter);
                 case 'N':
-                    if (str_iter_next(iter) == 'D' && str_iter_peek(iter) == ' ') return AND_T;
+                    if (str_iter_next(iter) == 'D' && istokdelim(str_iter_peek(iter))) return AND_T;
             }
-            return error;
+            return unknown(iter);
         case 'B':
             if (str_iter_next(iter) == 'P') return BP_T;
-            return error;
+            return unknown(iter);
         case 'C':
             switch (str_iter_next(iter)) {
                 case 'A':
                     if (str_iter_next(iter) == 'L' && str_iter_next(iter) == 'L' &&
-                        str_iter_peek(iter) == ' ')
+                        istokdelim(str_iter_peek(iter)))
                         return CALL_T;
-                    return error;
-                case 'L':
-                    if (str_iter_next(iter) == 'R' && str_iter_next(iter) == 'A' &&
-                        str_iter_peek(iter) == ' ')
-                        return CLRA_T;
-                    return error;
+                    return unknown(iter);
                 case 'M':
-                    if (str_iter_next(iter) == 'P' && str_iter_peek(iter) == ' ') return CMP_T;
+                    if (str_iter_next(iter) == 'P' && istokdelim(str_iter_peek(iter))) return CMP_T;
             }
-            return error;
+            return unknown(iter);
         case 'D':
             switch (str_iter_next(iter)) {
                 case 'E':
-                    if (str_iter_next(iter) == 'C' && str_iter_peek(iter) == ' ') return DEC_T;
-                    return error;
+                    if (str_iter_next(iter) == 'C' && istokdelim(str_iter_peek(iter))) return DEC_T;
+                    return unknown(iter);
                 case 'I':
-                    if (str_iter_peek(iter) == ' ') return DI_T;
+                    if (istokdelim(str_iter_peek(iter))) return DI_T;
                     if (str_iter_next(iter) == 'V' && str_iter_next(iter) == 'W' &&
-                        str_iter_peek(iter) == ' ')
+                        istokdelim(str_iter_peek(iter)))
                         return DIVW_T;
-                    return error;
+                    return unknown(iter);
                 case 'T':
-                    if (str_iter_peek(iter) == ' ') return DT_T;
+                    if (istokdelim(str_iter_peek(iter))) return DT_T;
             }
-            return error;
+            return unknown(iter);
         case 'E':
             switch (str_iter_next(iter)) {
                 case 'I':
-                    if (str_iter_peek(iter) == ' ') return EI_T;
-                    return error;
+                    if (istokdelim(str_iter_peek(iter))) return EI_T;
+                    return unknown(iter);
                 case 'N':
                     if (str_iter_next(iter) == 'T' && str_iter_next(iter) == 'E' &&
-                        str_iter_next(iter) == 'R' && str_iter_peek(iter) == ' ')
+                        str_iter_next(iter) == 'R' && istokdelim(str_iter_peek(iter)))
                         return ENTER_T;
-                    return error;
+                    return unknown(iter);
                 case 'T':
-                    if (str_iter_peek(iter) == ' ') return ET_T;
+                    if (istokdelim(str_iter_peek(iter))) return ET_T;
             }
-            return error;
+            return unknown(iter);
         case 'F':
             if (str_iter_next(iter) == 'L' && str_iter_next(iter) == 'A' &&
                 str_iter_next(iter) == 'G' && str_iter_next(iter) == 'S' &&
-                str_iter_peek(iter) == ' ')
+                istokdelim(str_iter_peek(iter)))
                 return FLAGS_T;
-            return error;
+            return unknown(iter);
         case 'H':
             switch (str_iter_next(iter)) {
                 case 'A':
                     if (str_iter_next(iter) == 'L' && str_iter_next(iter) == 'T' &&
                         !isalnum(str_iter_peek(iter)))
                         return HALT_T;
-                    return error;
+                    return unknown(iter);
                 case 'L':
                     return HL_T;
                 default:
                     iter->ptr--;
                     return H_T;
             }
-            return error;
+            return unknown(iter);
         case 'I':
             if (str_iter_next(iter) == 'N' && str_iter_next(iter) == 'C' &&
-                str_iter_peek(iter) == ' ')
+                istokdelim(str_iter_peek(iter)))
                 return INC_T;
-            return error;
+            return unknown(iter);
         case 'J':
             switch (str_iter_next(iter)) {
                 case 'C':
-                    if (str_iter_peek(iter) == ' ') return JC_T;
-                    return error;
+                    if (istokdelim(str_iter_peek(iter))) return JC_T;
+                    return unknown(iter);
                 case 'E':
                     if (str_iter_next(iter) == 'X' && str_iter_next(iter) == 'T' &&
-                        str_iter_peek(iter) == ' ')
+                        istokdelim(str_iter_peek(iter)))
                         return JEXT_T;
-                    return error;
+                    return unknown(iter);
                 case 'N':
                     switch (str_iter_next(iter)) {
                         case 'C':
-                            if (str_iter_peek(iter) == ' ') return JNC_T;
-                            return error;
+                            if (istokdelim(str_iter_peek(iter))) return JNC_T;
+                            return unknown(iter);
                         case 'Z':
-                            if (str_iter_peek(iter) == ' ') return JNZ_T;
-                            return error;
+                            if (istokdelim(str_iter_peek(iter))) return JNZ_T;
+                            return unknown(iter);
                     }
-                    return error;
+                    return unknown(iter);
                 case 'M':
-                    if (str_iter_next(iter) == 'P' && str_iter_peek(iter) == ' ') return JMP_T;
-                    return error;
+                    if (str_iter_next(iter) == 'P' && istokdelim(str_iter_peek(iter))) return JMP_T;
+                    return unknown(iter);
                 case 'Z':
-                    if (str_iter_peek(iter) == ' ') return JZ_T;
-                    return error;
+                    if (istokdelim(str_iter_peek(iter))) return JZ_T;
+                    return unknown(iter);
             }
-            return error;
+            return unknown(iter);
         case 'L':
             switch (str_iter_next(iter)) {
                 case 'E':
                     if (str_iter_next(iter) == 'A' && str_iter_next(iter) == 'V' &&
-                        str_iter_next(iter) == 'E' && str_iter_peek(iter) == ' ')
+                        str_iter_next(iter) == 'E' && istokdelim(str_iter_peek(iter)))
                         return LEAVE_T;
-                    return error;
+                    return unknown(iter);
                 case 'O':
                     if (str_iter_next(iter) == 'A' && str_iter_next(iter) == 'D' &&
-                        str_iter_peek(iter) == ' ')
+                        istokdelim(str_iter_peek(iter)))
                         return LOAD_T;
                 default:
                     iter->ptr--;
                     return L_T;
             }
-            return error;
+            return unknown(iter);
         case 'M':
             switch (str_iter_next(iter)) {
                 case 'A':
-                    if (str_iter_next(iter) == 'X' && str_iter_peek(iter) == ' ') return MAX_T;
-                    return error;
+                    if (str_iter_next(iter) == 'X' && istokdelim(str_iter_peek(iter))) return MAX_T;
+                    return unknown(iter);
                 case 'I':
-                    if (str_iter_next(iter) == 'N' && str_iter_peek(iter) == ' ') return MIN_T;
-                    return error;
+                    if (str_iter_next(iter) == 'N' && istokdelim(str_iter_peek(iter))) return MIN_T;
+                    return unknown(iter);
                 case 'U':
                     if (str_iter_next(iter) == 'L' && str_iter_next(iter) == 'W' &&
-                        str_iter_peek(iter) == ' ')
+                        istokdelim(str_iter_peek(iter)))
                         return MULW_T;
             }
-            return error;
+            return unknown(iter);
         case 'N':
             switch (str_iter_next(iter)) {
                 case 'E':
-                    if (str_iter_next(iter) == 'G' && str_iter_peek(iter) == ' ') return NEG_T;
-                    return error;
+                    if (str_iter_next(iter) == 'G' && istokdelim(str_iter_peek(iter))) return NEG_T;
+                    return unknown(iter);
                 case 'O':
                     switch (str_iter_next(iter)) {
                         case 'O':
-                            if (str_iter_next(iter) == 'P' && str_iter_peek(iter) == ' ')
+                            if (str_iter_next(iter) == 'P' && istokdelim(str_iter_peek(iter)))
                                 return NOOP_T;
-                            return error;
+                            return unknown(iter);
                         case 'T':
-                            if (str_iter_peek(iter) == ' ') return NOT_T;
+                            if (istokdelim(str_iter_peek(iter))) return NOT_T;
                     }
             }
-            return error;
+            return unknown(iter);
         case 'O':
-            if (str_iter_next(iter) == 'R' && str_iter_peek(iter) == ' ') return OR_T;
-            return error;
+            if (str_iter_next(iter) == 'R' && istokdelim(str_iter_peek(iter))) return OR_T;
+            return unknown(iter);
         case 'P':
             switch (str_iter_next(iter)) {
                 case 'C':
                     return PC_T;
                 case 'O':
-                    if (str_iter_next(iter) == 'P' && str_iter_peek(iter) == ' ') return POP_T;
-                    return error;
+                    if (str_iter_next(iter) == 'P' && istokdelim(str_iter_peek(iter))) return POP_T;
+                    return unknown(iter);
                 case 'U':
                     if (str_iter_next(iter) == 'S' && str_iter_next(iter) == 'H' &&
-                        str_iter_peek(iter) == ' ')
+                        istokdelim(str_iter_peek(iter)))
                         return PUSH_T;
             }
-            return error;
+            return unknown(iter);
         case 'R':
             switch (str_iter_next(iter)) {
                 case '0':
@@ -267,60 +287,61 @@ static void str_iter_skip_until_doublequotes(str_iter_t* iter) {
                     switch (str_iter_next(iter)) {
                         case 'S':
                             if (str_iter_next(iter) == 'E' && str_iter_next(iter) == 'T' &&
-                                str_iter_peek(iter) == ' ')
+                                istokdelim(str_iter_peek(iter)))
                                 return RESET_T;
-                            return error;
+                            return unknown(iter);
                         case 'T':
-                            if (str_iter_peek(iter) == ' ') return RET_T;
+                            if (istokdelim(str_iter_peek(iter))) return RET_T;
                     }
-                    return error;
+                    return unknown(iter);
                 case 'O':
                     switch (str_iter_next(iter)) {
                         case 'L':
-                            if (str_iter_peek(iter) == ' ') return ROL_T;
-                            return error;
+                            if (istokdelim(str_iter_peek(iter))) return ROL_T;
+                            return unknown(iter);
                         case 'R':
-                            if (str_iter_peek(iter) == ' ') return ROR_T;
+                            if (istokdelim(str_iter_peek(iter))) return ROR_T;
                     }
             }
-            return error;
+            return unknown(iter);
         case 'S':
             switch (str_iter_next(iter)) {
                 case 'B':
-                    if (str_iter_next(iter) == 'C' && str_iter_peek(iter) == ' ') return SBC_T;
-                    return error;
+                    if (str_iter_next(iter) == 'C' && istokdelim(str_iter_peek(iter))) return SBC_T;
+                    return unknown(iter);
                 case 'H':
                     switch (str_iter_next(iter)) {
                         case 'L':
-                            if (str_iter_peek(iter) == ' ') return SHL_T;
-                            return error;
+                            if (istokdelim(str_iter_peek(iter))) return SHL_T;
+                            return unknown(iter);
                         case 'R':
-                            if (str_iter_peek(iter) == ' ') return SHR_T;
+                            if (istokdelim(str_iter_peek(iter))) return SHR_T;
                     }
-                    return error;
+                    return unknown(iter);
                 case 'P':
                     return SP_T;
                 case 'T':
                     if (str_iter_next(iter) == 'O' && str_iter_next(iter) == 'R' &&
-                        str_iter_next(iter) == 'E' && str_iter_peek(iter) == ' ')
+                        str_iter_next(iter) == 'E' && istokdelim(str_iter_peek(iter)))
                         return STORE_T;
-                    return error;
+                    return unknown(iter);
                 case 'U':
                     if (str_iter_next(iter) == 'B') {
-                        if (str_iter_peek(iter) == ' ') return SUB_T;
-                        if (str_iter_next(iter) == 'W' && str_iter_peek(iter) == ' ') return SUBW_T;
+                        if (istokdelim(str_iter_peek(iter))) return SUB_T;
+                        if (str_iter_next(iter) == 'W' && istokdelim(str_iter_peek(iter)))
+                            return SUBW_T;
                     }
             }
-            return error;
+            return unknown(iter);
         case 'X':
             switch (str_iter_next(iter)) {
                 case 'C':
-                    if (str_iter_next(iter) == 'H' && str_iter_peek(iter) == ' ') return XCH_T;
-                    return error;
+                    if (str_iter_next(iter) == 'H' && istokdelim(str_iter_peek(iter))) return XCH_T;
+                    return unknown(iter);
                 case 'O':
-                    if (str_iter_next(iter) == 'R' && str_iter_peek(iter) == ' ') return XOR_T;
+                    if (str_iter_next(iter) == 'R' && istokdelim(str_iter_peek(iter))) return XOR_T;
             }
-            return error;
+            return unknown(iter);
         case '0':
         case '1':
         case '2':
@@ -345,7 +366,7 @@ static void str_iter_skip_until_doublequotes(str_iter_t* iter) {
                     str_iter_skip_number(iter);
                     return INTEGER_T;
             }
-            return error;
+            return unknown(iter);
         case 'a':
         case 'b':
         case 'c':
@@ -381,8 +402,9 @@ static void str_iter_skip_until_doublequotes(str_iter_t* iter) {
             if (str_iter_peek(iter) == '[') {
                 return LABEL_IDX_T;
             }
+            return unknown(iter);
     }
-    return error;
+    return unknown(iter);
 }
 
 TokenLine tokenizeLine(str_iter_t* iter, size_t lineNr) {
