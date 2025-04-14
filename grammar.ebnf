@@ -1,0 +1,42 @@
+program     ::= line*
+line        ::= ( labeldef | instruction )? comment? "\n"
+
+instruction ::= uppercase+ ( space operand ( ", " operand )* )?
+
+operand     ::= mem_imm | mem_hl | mem_l | register | acc | hl | imm_expr | labelref
+
+labeldef    ::= ( lowercase | "_" )+ ":"
+labelref    ::= "." ( lowercase | "_" )+
+comment     ::= ";" -"\n"*
+
+mem_imm     ::= "(" imm_expr ")"
+mem_hl      ::= "(" ( imm_expr plus_minus )? hl ( plus_minus imm_expr )? ")"
+mem_l       ::= "(" ( imm_expr plus_minus )? l ( plus_minus imm_expr )? ")"
+register    ::= "R0" | "R1" | "H" | "L"
+acc         ::= "ACC"
+hl          ::= "HL"
+l           ::= "L"
+
+imm_expr    ::= ( immediate ( plus_minus immediate )* )
+plus_minus  ::= "+" | "-"
+
+immediate   ::= hex | int | oct | bin
+
+hex         ::= "0" ( "x" | "X" ) hex_digit+
+int         ::= int_digit+
+oct         ::= "0" ( "o" | "O" ) oct_digit+
+bin         ::= "0" ( "b" | "B" ) bin_digit+
+
+hex_digit   ::= int_digit | "A" | "B" | "C" | "D" | "E" | "F" | "a" | "b" | "c" | "d" | "e" | "f"
+int_digit   ::= oct_digit | "8" | "9"
+oct_digit   ::= bin_digit | "2" | "3" | "4" | "5" | "6" | "7"
+bin_digit   ::= "0" | "1"
+
+whitespace  ::= space | "\f" | "\n" | "\r" | "\t" | "\v"
+space       ::= " "
+
+lowercase   ::= "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" |
+                "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
+
+uppercase   ::= "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" |
+                "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z"
