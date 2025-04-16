@@ -14,7 +14,7 @@
 
 Assembler assembler;
 
-#define HANDLE_BASIC_OP(opcode)                                                      \
+#define HANDLE_BASIC_OP(opcode)                                                                \
     do {                                                                                       \
         Token* new_token = iter_next(&token_line);                                             \
         if (new_token == NULL || is_token_comment(new_token->tok)) {                           \
@@ -675,28 +675,28 @@ static void assembleLinePass1(TokenLine* line) {
     switch (token->tok) {
         case NOOP_T:
             HANDLE_BASIC_OP(NOOP);
-                break;
+            break;
         case HALT_T:
             HANDLE_BASIC_OP(HALT);
-                break;
+            break;
         case EI_T:
             HANDLE_BASIC_OP(EI);
-                break;
+            break;
         case DI_T:
             HANDLE_BASIC_OP(DI);
-                break;
+            break;
         case ET_T:
             HANDLE_BASIC_OP(ET);
-                break;
+            break;
         case DT_T:
             HANDLE_BASIC_OP(DT);
-                break;
+            break;
         case RESET_T:
             HANDLE_BASIC_OP(RESET);
-                break;
+            break;
         case RET_T:
             HANDLE_BASIC_OP(RET);
-                break;
+            break;
         case LEAVE_T:
             HANDLE_BASIC_OP(LEAVE);
             break;
