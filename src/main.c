@@ -10,9 +10,11 @@
 #include "headers/tokenizer.h"
 #include "headers/util.h"
 
+#define USAGE "USAGE: build/vm <filename>.casm\n"
+
 int main(int argc, char** argv) {
     if (argc <= 1) {
-        printf("USAGE: ./build/vm <filename>.casm");
+        printf(USAGE);
     } else if (argc == 2) {
         CPU cpu;
         initCpu(&cpu);
@@ -35,7 +37,7 @@ int main(int argc, char** argv) {
         freeCpu(&cpu);
     } else {
         printf("compiling multiple assembly files is currently unsupported\n");
-        printf("USAGE: ./build/vm <filename>.casm");
+        printf(USAGE);
     }
 
     return 0;
