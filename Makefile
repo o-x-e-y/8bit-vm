@@ -1,4 +1,4 @@
-executable := custom-emulator
+executable := vm
 build-path := ./build
 exec-path := $(build-path)/$(executable)
 
@@ -11,13 +11,13 @@ valgrind-flags := --leak-check=yes --track-origins=yes -s --leak-check=full --sh
 
 src_files := $(wildcard $(src)/*.c)
 
-.PHONY: build
-build: $(src_files)
-	cc $(debug-flags) $(src_files) -o $(exec-path)
-
 .PHONY: build-release
 build-release: $(src_files)
 	cc $(src_files) $(release-flags) -o $(exec-path)
+	
+.PHONY: build
+build: $(src_files)
+	cc $(debug-flags) $(src_files) -o $(exec-path)
 
 .PHONY: debug
 debug: $(src_files)
