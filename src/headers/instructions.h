@@ -668,7 +668,7 @@ typedef enum Opcode {
     OP_STORE_L      = 0b00010110,
     OP_STORE_H      = 0b00010111,
     // OP_unused    = 0b00011000,
-    // OP_unused    = 0b00011001,
+    OP_XCH_IMHL     = 0b00011001,
     OP_XCH_ML       = 0b00011010,
     OP_XCH_MHL      = 0b00011011,
     OP_XCH_R0       = 0b00011100,

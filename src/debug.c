@@ -32,6 +32,7 @@ void printOpcode(Opcode op) {
         case OP_STORE_R1: printf("STORE_R1"); break;
         case OP_STORE_L: printf("STORE_L"); break;
         case OP_STORE_H: printf("STORE_H"); break;
+        case OP_XCH_IMHL: printf("XCH_IMHL"); break;
         case OP_XCH_ML: printf("XCH_ML"); break;
         case OP_XCH_MHL: printf("XCH_MHL"); break;
         case OP_XCH_R0: printf("XCH_R0"); break;
