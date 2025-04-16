@@ -524,7 +524,7 @@ void printNextOperation(const uint8_t* memory) {
         case OP_ADD_HL_I: {
             uint16_t high = (uint16_t)*(memory + 1);
             uint16_t low = (uint16_t)*(memory + 2);
-            printf("JNC, %u", (high << 8) | low);
+            printf("ADD_HL_I, %u", (high << 8) | low);
             break;
         }
         case OP_INC_HL: printf("OP_INC_HL"); break;
