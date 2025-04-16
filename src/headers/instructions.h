@@ -45,7 +45,7 @@ INSTRUCTION(RESET) { resetCpu(cpu); }
     }
 
 LOAD(I, PC += 2, MEMORY(PC - 1))
-LOAD(IMHL, PC += 3, MEMORY((((uint16_t)MEMORY(PC - 2) << 8) | (uint16_t)MEMORY(PC - 1)) + HL))
+LOAD(IM, PC += 3, MEMORY((((uint16_t)MEMORY(PC - 2) << 8) | (uint16_t)MEMORY(PC - 1))))
 LOAD(ML, PC += 1, MEMORY(L))
 LOAD(MHL, PC += 1, (MEMORY(HL)))
 LOAD(R0, PC += 1, R0)
@@ -62,7 +62,6 @@ LOAD(H, PC += 1, H)
     }
 
 STORE(IM, PC += 3, MEMORY(((uint16_t)MEMORY(PC - 2) << 8) | (uint16_t)MEMORY(PC - 1)))
-STORE(IMHL, PC += 3, MEMORY((((uint16_t)MEMORY(PC - 2) << 8) | (uint16_t)MEMORY(PC - 1)) + HL))
 STORE(ML, PC += 1, MEMORY(L))
 STORE(MHL, PC += 1, MEMORY(HL))
 STORE(R0, PC += 1, R0)
@@ -80,7 +79,7 @@ STORE(H, PC += 1, H)
         UPDATE_SF(ACC);             \
     }
 
-XCH(IMHL, PC += 3, MEMORY((((uint16_t)MEMORY(PC - 2) << 8) | (uint16_t)MEMORY(PC - 1)) + HL))
+XCH(IM, PC += 3, MEMORY(((uint16_t)MEMORY(PC - 2) << 8) | (uint16_t)MEMORY(PC - 1)))
 XCH(ML, PC += 1, MEMORY(L))
 XCH(MHL, PC += 1, MEMORY(HL))
 XCH(R0, PC += 1, R0)
@@ -565,6 +564,26 @@ INSTRUCTION(LEAVE) {
 }
 LOAD(BPI, PC += 2, STACK(BP - MEMORY(PC - 1)))
 STORE(BPI, PC += 2, STACK(BP - MEMORY(PC - 1)))
+INSTRUCTION(ADD_L_I) {
+    PC += 2;
+    L += MEMORY(PC - 1);
+}
+INSTRUCTION(ADD_HL_I) {
+    PC += 3;
+    uint16_t val = HL + (((uint16_t)(MEMORY(PC - 2)) << 8) | ((uint16_t)MEMORY(PC - 1)));
+    H = (uint8_t)((val >> 8) & 0xFF);
+    L = (uint8_t)MEMORY(PC - 1);
+}
+INSTRUCTION(LOAD_L_I) {
+    PC += 2;
+    L = MEMORY(PC - 1);
+}
+INSTRUCTION(LOAD_HL_I) {
+    PC += 3;
+    uint16_t val = ((uint16_t)(MEMORY(PC - 2)) << 8) | ((uint16_t)MEMORY(PC - 1));
+    H = (uint8_t)((val >> 8) & 0xFF);
+    L = (uint8_t)MEMORY(PC - 1);
+}
 
 #define MIN(variation, src)        \
     INSTRUCTION(MIN_##variation) { \
@@ -609,9 +628,9 @@ MAX(H, H)
 /// Table containing function pointers to all 256 different operations
 const static Instruction OP_TABLE[256] = {
     NOOP,       HALT,       EI,         DI,         ET,         DT,         CLRA,       RESET, 
-    LOAD_I,     LOAD_IMHL,  LOAD_ML,    LOAD_MHL,   LOAD_R0,    LOAD_R1,    LOAD_L,     LOAD_H,
-    STORE_IM,   STORE_IMHL, STORE_ML,   STORE_MHL,  STORE_R0,   STORE_R1,   STORE_L,    STORE_H,
-    unused,     XCH_IMHL,   XCH_ML,     XCH_MHL,    XCH_R0,     XCH_R1,     XCH_L,      XCH_H,
+    LOAD_I,     LOAD_IM,    LOAD_ML,    LOAD_MHL,   LOAD_R0,    LOAD_R1,    LOAD_L,     LOAD_H,
+    LOAD_L_I,   STORE_IM,   STORE_ML,   STORE_MHL,  STORE_R0,   STORE_R1,   STORE_L,    STORE_H,
+    LOAD_HL_I,  XCH_IM,     XCH_ML,     XCH_MHL,    XCH_R0,     XCH_R1,     XCH_L,      XCH_H,
     ADD_I,      ADD_ACC,    ADD_ML,     ADD_MHL,    ADD_R0,     ADD_R1,     ADD_L,      ADD_H,
     ADC_I,      ADC_ACC,    ADC_ML,     ADC_MHL,    ADC_R0,     ADC_R1,     ADC_L,      ADC_H,
     SUB_I,      SUB_ACC,    SUB_ML,     SUB_MHL,    SUB_R0,     SUB_R1,     SUB_L,      SUB_H,
@@ -633,7 +652,7 @@ const static Instruction OP_TABLE[256] = {
     CMP_I,      CMP_ACC,    CMP_ML,     CMP_MHL,    CMP_R0,     CMP_R1,     CMP_L,      CMP_H,
     PUSH_I,     PUSH_ACC,   PUSH_R0,    PUSH_R1,    PUSH_L,     PUSH_H,     PUSH_BP,    PUSH_FLAGS,
     POP_IM,     POP_ACC,    POP_R0,     POP_R1,     POP_L,      POP_H,      POP_BP,     POP_FLAGS,
-    CALL,       RET,        ENTER,      LEAVE,      LOAD_BPI,   STORE_BPI,  unused,     unused, 
+    CALL,       RET,        ENTER,      LEAVE,      LOAD_BPI,   STORE_BPI,  ADD_L_I,    ADD_HL_I,
     MIN_I,      unused,     MIN_ML,     MIN_MHL,    MIN_R0,     MIN_R1,     MIN_L,      MIN_H, 
     MAX_I,      unused,     MAX_ML,     MAX_MHL,    MAX_R0,     MAX_R1,     MAX_L,      MAX_H, 
     unused,     unused,     unused,     unused,     unused,     unused,     unused,     unused, 
@@ -652,23 +671,23 @@ typedef enum Opcode {
     OP_CLRA         = 0b00000110,
     OP_RESET        = 0b00000111,
     OP_LOAD_I       = 0b00001000,
-    OP_LOAD_IMHL    = 0b00001001,
+    OP_LOAD_IM      = 0b00001001,
     OP_LOAD_ML      = 0b00001010,
     OP_LOAD_MHL     = 0b00001011,
     OP_LOAD_R0      = 0b00001100,
     OP_LOAD_R1      = 0b00001101,
     OP_LOAD_L       = 0b00001110,
     OP_LOAD_H       = 0b00001111,
-    OP_STORE_IM     = 0b00010000,
-    OP_STORE_IMHL   = 0b00010001,
+    OP_LOAD_L_I     = 0b00010000,
+    OP_STORE_IM     = 0b00010001,
     OP_STORE_ML     = 0b00010010,
     OP_STORE_MHL    = 0b00010011,
     OP_STORE_R0     = 0b00010100,
     OP_STORE_R1     = 0b00010101,
     OP_STORE_L      = 0b00010110,
     OP_STORE_H      = 0b00010111,
-    // OP_unused    = 0b00011000,
-    OP_XCH_IMHL     = 0b00011001,
+    OP_LOAD_HL_I    = 0b00011000,
+    OP_XCH_IM       = 0b00011001,
     OP_XCH_ML       = 0b00011010,
     OP_XCH_MHL      = 0b00011011,
     OP_XCH_R0       = 0b00011100,
@@ -849,8 +868,8 @@ typedef enum Opcode {
     OP_LEAVE        = 0b11001011,
     OP_LOAD_BPI     = 0b11001100,
     OP_STORE_BPI    = 0b11001101,
-    // OP_unused    = 0b11001110,
-    // OP_unused    = 0b11001111,
+    OP_ADD_L_I     = 0b11001110,
+    OP_ADD_HL_I    = 0b11001111,
     OP_MIN_I        = 0b11010000,
     // OP_unused    = 0b11010001,
     OP_MIN_ML       = 0b11010010,

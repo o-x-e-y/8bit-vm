@@ -17,22 +17,23 @@ void printOpcode(Opcode op) {
         case OP_CLRA: printf("CLRA"); break;
         case OP_RESET: printf("RESET"); break;
         case OP_LOAD_I: printf("LOAD_I"); break;
-        case OP_LOAD_IMHL: printf("LOAD_IMHL"); break;
+        case OP_LOAD_IM: printf("LOAD_IM"); break;
         case OP_LOAD_ML: printf("LOAD_ML"); break;
         case OP_LOAD_MHL: printf("LOAD_MHL"); break;
         case OP_LOAD_R0: printf("LOAD_R0"); break;
         case OP_LOAD_R1: printf("LOAD_R1"); break;
         case OP_LOAD_L: printf("LOAD_L"); break;
         case OP_LOAD_H: printf("LOAD_H"); break;
+        case OP_LOAD_L_I: printf("OP_LOAD_L_I"); break;
         case OP_STORE_IM: printf("STORE_IM"); break;
-        case OP_STORE_IMHL: printf("STORE_IMHL"); break;
         case OP_STORE_ML: printf("STORE_ML"); break;
         case OP_STORE_MHL: printf("STORE_MHL"); break;
         case OP_STORE_R0: printf("STORE_R0"); break;
         case OP_STORE_R1: printf("STORE_R1"); break;
         case OP_STORE_L: printf("STORE_L"); break;
         case OP_STORE_H: printf("STORE_H"); break;
-        case OP_XCH_IMHL: printf("XCH_IMHL"); break;
+        case OP_LOAD_HL_I: printf("OP_LOAD_HL_I"); break;
+        case OP_XCH_IM: printf("XCH_IM"); break;
         case OP_XCH_ML: printf("XCH_ML"); break;
         case OP_XCH_MHL: printf("XCH_MHL"); break;
         case OP_XCH_R0: printf("XCH_R0"); break;
@@ -205,6 +206,8 @@ void printOpcode(Opcode op) {
         case OP_LEAVE: printf("LEAVE"); break;
         case OP_LOAD_BPI: printf("LOAD_BPI"); break;
         case OP_STORE_BPI: printf("STORE_BPI"); break;
+        case OP_ADD_L_I: printf("ADD_L_I"); break;
+        case OP_ADD_HL_I: printf("ADD_HL_I"); break;
         case OP_INC_HL: printf("OP_INC_HL"); break;
         case OP_DEC_HL: printf("OP_DEC_HL"); break;
         case OP_NEG_HL: printf("OP_NEG_HL"); break;
@@ -226,8 +229,13 @@ void printOpcode(Opcode op) {
     }
 }
 
-void printNextOperation(const uint8_t* memory) {    
-    switch (*memory) {
+void printNextOperation(const uint8_t* memory) {
+    if (memory == NULL) {
+        printf("NULL");
+        return;
+    }
+    
+    switch ((Opcode)*memory) {
         case OP_NOOP: printf("NOOP"); break;
         case OP_HALT: printf("HALT"); break;
         case OP_EI: printf("EI"); break;
@@ -237,10 +245,10 @@ void printNextOperation(const uint8_t* memory) {
         case OP_CLRA: printf("CLRA"); break;
         case OP_RESET: printf("RESET"); break;
         case OP_LOAD_I: printf("LOAD_I, %u", *(memory + 1)); break;
-        case OP_LOAD_IMHL: {
+        case OP_LOAD_IM: {
             uint16_t high = (uint16_t)*(memory + 1);
             uint16_t low = (uint16_t)*(memory + 2);
-            printf("LOAD_IMHL, %u", (high << 8) | low);
+            printf("LOAD_IM, %u", (high << 8) | low);
             break;
         }
         case OP_LOAD_ML: printf("LOAD_ML"); break;
@@ -249,16 +257,11 @@ void printNextOperation(const uint8_t* memory) {
         case OP_LOAD_R1: printf("LOAD_R1"); break;
         case OP_LOAD_L: printf("LOAD_L"); break;
         case OP_LOAD_H: printf("LOAD_H"); break;
+        case OP_LOAD_L_I: printf("LOAD_L_I, %u", *(memory + 1)); break;
         case OP_STORE_IM: {
             uint16_t high = (uint16_t)*(memory + 1);
             uint16_t low = (uint16_t)*(memory + 2);
             printf("STORE_IM, %u", (high << 8) | low);
-            break;
-        }
-        case OP_STORE_IMHL: {
-            uint16_t high = (uint16_t)*(memory + 1);
-            uint16_t low = (uint16_t)*(memory + 2);
-            printf("STORE_IMHL, %u", (high << 8) | low);
             break;
         }
         case OP_STORE_ML: printf("STORE_ML"); break;
@@ -267,6 +270,18 @@ void printNextOperation(const uint8_t* memory) {
         case OP_STORE_R1: printf("STORE_R1"); break;
         case OP_STORE_L: printf("STORE_L"); break;
         case OP_STORE_H: printf("STORE_H"); break;
+        case OP_LOAD_HL_I: {
+            uint16_t high = (uint16_t)*(memory + 1);
+            uint16_t low = (uint16_t)*(memory + 2);
+            printf("LOAD_HL_I, %u", (high << 8) | low);
+            break;
+        }
+        case OP_XCH_IM: {
+            uint16_t high = (uint16_t)*(memory + 1);
+            uint16_t low = (uint16_t)*(memory + 2);
+            printf("XCH_IM, %u", (high << 8) | low);
+            break;
+        }
         case OP_XCH_ML: printf("XCH_ML"); break;
         case OP_XCH_MHL: printf("XCH_MHL"); break;
         case OP_XCH_R0: printf("XCH_R0"); break;
@@ -505,6 +520,13 @@ void printNextOperation(const uint8_t* memory) {
         case OP_LEAVE: printf("LEAVE"); break;
         case OP_LOAD_BPI: printf("LOAD_BPI"); break;
         case OP_STORE_BPI: printf("STORE_BPI"); break;
+        case OP_ADD_L_I: printf("ADD_L_I, %u", *(memory + 1)); break;
+        case OP_ADD_HL_I: {
+            uint16_t high = (uint16_t)*(memory + 1);
+            uint16_t low = (uint16_t)*(memory + 2);
+            printf("JNC, %u", (high << 8) | low);
+            break;
+        }
         case OP_INC_HL: printf("OP_INC_HL"); break;
         case OP_DEC_HL: printf("OP_DEC_HL"); break;
         case OP_NEG_HL: printf("OP_NEG_HL"); break;
