@@ -1,5 +1,5 @@
 ; recursive fibonacci implementation
-; calling convention: `nth_fib`'s argument is passed in R1, and its return value is also in R1.
+; calling convention: `nth_fib`'s argument is passed in HL, and its return value is also in HL.
 
 ; ET
 
