@@ -14,6 +14,16 @@
 
 Assembler assembler;
 
+#define HANDLE_BASIC_OP(opcode)                                                      \
+    do {                                                                                       \
+        Token* new_token = iter_next(&token_line);                                             \
+        if (new_token == NULL || is_token_comment(new_token->tok)) {                           \
+            PUSH_OP(OP_##opcode);                                                              \
+        } else {                                                                               \
+            printError(new_token, OP_DOESNT_USE_OPERAND_E, assembler.line, assembler.line_nr); \
+        }                                                                                      \
+    } while (0)
+
 #define PUSH_OP(opcode)                     \
     do {                                    \
         uint8_t op = (uint8_t)opcode;       \
@@ -95,29 +105,6 @@ static inline Token* nextToken(vec_iter_t* token_line) {
     }
     return token;
 }
-
-#define BASIC_CASE(op) op##_T : return OP_##op
-
-// clang-format off
-
-static Opcode basic_op_to_bin(TokenSymbol tok) {
-    switch (tok) {
-        case BASIC_CASE(NOOP);
-        case BASIC_CASE(HALT);
-        case BASIC_CASE(EI);
-        case BASIC_CASE(DI);
-        case BASIC_CASE(ET);
-        case BASIC_CASE(DT);
-        case BASIC_CASE(RESET);
-        case BASIC_CASE(RET);
-        case BASIC_CASE(LEAVE);
-        default:
-            printf("Unreachable!");
-            exit(1);
-    }
-}
-
-// clang-format on
 
 void expr_apply(uint16_t* val, ExprOperator op, uint16_t to_apply) {
     switch (op) {
@@ -687,22 +674,32 @@ static void assembleLinePass1(TokenLine* line) {
 
     switch (token->tok) {
         case NOOP_T:
+            HANDLE_BASIC_OP(NOOP);
+                break;
         case HALT_T:
+            HANDLE_BASIC_OP(HALT);
+                break;
         case EI_T:
+            HANDLE_BASIC_OP(EI);
+                break;
         case DI_T:
+            HANDLE_BASIC_OP(DI);
+                break;
         case ET_T:
+            HANDLE_BASIC_OP(ET);
+                break;
         case DT_T:
+            HANDLE_BASIC_OP(DT);
+                break;
         case RESET_T:
+            HANDLE_BASIC_OP(RESET);
+                break;
         case RET_T:
-        case LEAVE_T: {
-            Token* new_token = iter_next(&token_line);
-            if (new_token == NULL || is_token_comment(new_token->tok)) {
-                PUSH_OP(basic_op_to_bin(token->tok));
-            } else {
-                printError(new_token, OP_DOESNT_USE_OPERAND_E, assembler.line, assembler.line_nr);
-            }
+            HANDLE_BASIC_OP(RET);
+                break;
+        case LEAVE_T:
+            HANDLE_BASIC_OP(LEAVE);
             break;
-        }
         case LOAD_T:
             parse_load(token_line);
             break;
