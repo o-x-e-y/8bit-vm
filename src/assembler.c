@@ -108,10 +108,10 @@ static inline Token* nextToken(vec_iter_t* token_line) {
 
 void expr_apply(uint16_t* val, ExprOperator op, uint16_t to_apply) {
     switch (op) {
-        case MINUS_EOP:
+        case PLUS_EOP:
             *val += to_apply;
             break;
-        case PLUS_EOP:
+        case MINUS_EOP:
             *val -= to_apply;
             break;
     }
