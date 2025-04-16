@@ -16,20 +16,20 @@ int main(int argc, char** argv) {
     } else if (argc == 2) {
         CPU cpu;
         initCpu(&cpu);
-        
+
         const char* filename = argv[1];
         const string_t programStr = read_file_to_str(filename);
         const Executable exec = assemble(from_str_slice(programStr));
-    
+
         printf("created executable with size %lu\n", exec.size);
-    
+
         loadProgram(&cpu, exec.executable, exec.size);
-    
+
         runCpu(&cpu);
-    
+
         printCpu(&cpu);
         printStack(&cpu, 10);
-        
+
         free(exec.executable);
         free_str((string_t*)&programStr);
         freeCpu(&cpu);
@@ -37,11 +37,9 @@ int main(int argc, char** argv) {
         printf("compiling multiple assembly files is currently unsupported\n");
         printf("USAGE: ./build/vm <filename>.casm");
     }
-    
+
     return 0;
 }
-
-
 
 int old_main(int argc, char** argv) {
     CPU cpu;
