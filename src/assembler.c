@@ -36,12 +36,12 @@ Assembler assembler;
         push_vec(&assembler.compiled, &imm1); \
     } while (0)
 
-#define PUSH_IMM16(imm)                       \
-    do {                                      \
-        uint8_t imm1 = (uint8_t)(imm >> 8);   \
-        uint8_t imm2 = (uint8_t)(imm & 0xFF); \
-        push_vec(&assembler.compiled, &imm1); \
-        push_vec(&assembler.compiled, &imm2); \
+#define PUSH_IMM16(imm)                         \
+    do {                                        \
+        uint8_t imm1 = (uint8_t)((imm) >> 8);   \
+        uint8_t imm2 = (uint8_t)((imm) & 0xFF); \
+        push_vec(&assembler.compiled, &imm1);   \
+        push_vec(&assembler.compiled, &imm2);   \
     } while (0)
 
 #define PUSH_LABEL_REF(token)                                                                    \
