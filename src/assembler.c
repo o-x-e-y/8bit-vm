@@ -321,8 +321,6 @@ static inline void parse_xch(vec_iter_t token_line) {
     Token* token = nextToken(&token_line);
     if (token == NULL) return;
 
-    MemExpr expr;
-
     switch (token->tok) {
         PARSE_CASE(XCH, R0);
         PARSE_CASE(XCH, R1);
