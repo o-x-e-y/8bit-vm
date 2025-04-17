@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
         const string_t programStr = read_file_to_str(filename);
         const Executable exec = assemble(from_str_slice(programStr));
 
-        printf("created executable with size %lu\n", exec.size);
+        printf("created executable with size %lu\n", exec.size - PROGRAM_START);
 
         loadProgram(&cpu, exec.executable, exec.size);
 
