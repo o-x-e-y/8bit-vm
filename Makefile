@@ -1,39 +1,90 @@
 executable := vm
 build-path := ./build
-exec-path := $(build-path)/$(executable)
 
-src := ./src
+obj-path := $(build-path)/obj
+test-obj-path := $(build-path)/test-obj
+release-obj-path := $(build-path)/release-obj
+
+exec-path := $(build-path)/$(executable)
+test-exec-path := $(build-path)/test-$(executable)
+release-exec-path := $(build-path)/release-$(executable)
+
+src-folder := ./src
+test-folder := ./tests
 headers := ./src/headers
 
 debug-flags := -g -O0 -Wall
 release-flags := -O3
 valgrind-flags := --leak-check=yes --track-origins=yes -s --leak-check=full --show-leak-kinds=all
 
-src_files := $(wildcard $(src)/*.c)
+src-files := $(wildcard $(src-folder)/*.c)
+main-file := $(src-folder)/main.c
+src-files-no-main := $(filter-out $(main-file), $(src-files))
+test-files := $(wildcard $(test-folder)/*.c)
+
+src-objs := $(patsubst $(src-folder)/%.c, $(obj-path)/%.o, $(src-files))
+src-objs-no-main := $(patsubst $(src-folder)/%.c, $(obj-path)/%.o, $(src-files-no-main))
+test-objs := $(patsubst $(test-folder)/%.c, $(test-obj-path)/%.o, $(test-files))
+release-objs := $(patsubst $(src-folder)/%.c, $(release-obj-path)/%.o, $(src-files))
+
+$(shell mkdir -p $(obj-path) $(test-obj-path) $(release-obj-path))
+
+# create objs with debug flags
+$(obj-path)/%.o: $(src-folder)/%.c
+	cc $(debug-flags) -I$(headers) -c $< -o $@
+
+# create test objs
+$(test-obj-path)/%.o: $(test-folder)/%.c
+	cc $(debug-flags) -I$(headers) -I$(test-folder) -c $< -o $@
+
+# create objs with release flags
+$(release-obj-path)/%.o: $(src-folder)/%.c
+	cc $(release-flags) -I$(headers) -c $< -o $@
+
+# build debug executable
+$(exec-path): $(src-objs)
+	cc $(debug-flags) $^ -o $@
+
+# build test executable
+$(test-exec-path): $(test-objs) $(src-objs-no-main)
+	cc $(debug-flags) $^ -o $@
+
+# build release executable
+$(release-exec-path): $(release-objs)
+	cc $(release-flags) $^ -o $@
 
 .PHONY: build-release
-build-release: $(src_files)
-	cc $(src_files) $(release-flags) -o $(exec-path)
+build-release: $(release-exec-path)
 	
+.PHONY: build-all
+build-all: $(exec-path) $(release-exec-path) $(test-exec-path)
+
 .PHONY: build
-build: $(src_files)
-	cc $(debug-flags) $(src_files) -o $(exec-path)
+build: $(exec-path)
 
 .PHONY: debug
-debug: $(src_files)
-	cc $(debug-flags) $(src_files) -o $(exec-path) && $(exec-path)
+debug: $(exec-path)
+	$(exec-path) $(ARGS)
 
 .PHONY: release
-release: $(src_files)
-	cc $(release-flags) $(src_files) -o $(exec-path) && $(exec-path)
+release: build-release
+	$(exec-path) $(ARGS)
+
+.PHONY: clean
+clean:
+	rm -rf $(build-path)
 
 .PHONY: valgrind
 valgrind: $(exec-path)
-	valgrind $(valgrind-flags) $(exec-path)
+	valgrind $(valgrind-flags) $(exec-path) $(ARGS)
+
+.PHONY: test
+test: $(test-exec-path)
+	$(test-exec-path)
 
 .PHONY: fmt
 fmt:
-	clang-format -i -style=file $(wildcard $(src)/*.c) $(wildcard $(headers)/*.h)
+	clang-format -i -style=file $(wildcard $(test-folder)/*.c) $(wildcard $(src-folder)/*.c) $(wildcard $(headers)/*.h)
 
 #aliases
 
@@ -42,6 +93,9 @@ b: build
 
 .PHONY: br
 br: build-release
+	
+.PHONY: ba
+ba: build-all
 
 .PHONY: d
 d: debug
@@ -54,3 +108,6 @@ v: valgrind
 
 .PHONY: bv
 bv: build valgrind
+	
+.PHONY: t
+t: test
