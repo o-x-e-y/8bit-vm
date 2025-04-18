@@ -3,6 +3,8 @@ stages:
 
 unit_tests:
   stage: test
+  tags:
+    - unit-tests
   image: ubuntu:latest
   before_script:
     - apt-get update -qq && apt-get install -y -qq make build-essential gawk
