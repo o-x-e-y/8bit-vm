@@ -1,6 +1,9 @@
 #ifndef __OXEY_TESTS_H
 #define __OXEY_TESTS_H
 
-void test_fn(int num);
+#include "greatest.h"
+
+SUITE(INSTRUCTION_PARITY_SUITE);
+SUITE(INSTRUCTION_FUNCTIONALITY_SUITE);
 
 #endif
