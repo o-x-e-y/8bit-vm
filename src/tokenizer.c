@@ -436,7 +436,7 @@ TokenLine tokenizeLine(str_iter_t* iter, size_t line_nr) {
 
         str_iter_skip_space(iter);  // skip spaces until potential newline
     }
-    
+
     // if for whatever reason no tokens were encountered on the line, free underlying vec
     if (res.len == 0) {
         free_vec(&res, NULL);
@@ -444,17 +444,16 @@ TokenLine tokenizeLine(str_iter_t* iter, size_t line_nr) {
     }
 
     slice_t substr = from_cstr_slice(line_start, (size_t)(iter->ptr - line_start));
-    
+
     // skip newline if while loop exited because of it while not putting it in the substr
-    if (str_iter_peek(iter) == '\n')
-        str_iter_next(iter);
+    if (str_iter_peek(iter) == '\n') str_iter_next(iter);
 
     return (TokenLine){.tokens = res, .substr = substr, .line_nr = line_nr};
 }
 
 TokenLines tokenizeProgram(slice_t program) {
     vec_t res = new_vec(10, sizeof(TokenLine));
-    size_t lineNr = 1; // first line in an editor is 1
+    size_t lineNr = 1;  // first line in an editor is 1
 
     str_iter_t iter = iter_from_slice(program);
 
