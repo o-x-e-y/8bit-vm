@@ -454,7 +454,7 @@ TokenLine tokenizeLine(str_iter_t* iter, size_t line_nr) {
 
 TokenLines tokenizeProgram(slice_t program) {
     vec_t res = new_vec(10, sizeof(TokenLine));
-    size_t lineNr = 0;
+    size_t lineNr = 1; // first line in an editor is 1
 
     str_iter_t iter = iter_from_slice(program);
 
