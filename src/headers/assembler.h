@@ -33,6 +33,7 @@ typedef struct {
 } LabelRef;
 
 typedef struct Assembler {
+    slice_t path;
     size_t line_nr;
     slice_t line;
     map_t label_def_map;
@@ -45,6 +46,6 @@ typedef struct Executable {
     size_t size;
 } Executable;
 
-Executable assemble(slice_t program);
+Executable assemble(slice_t program, slice_t path);
 
 #endif

@@ -46,10 +46,12 @@ TEST assemble_fibonacci(void) {
 
     initCpu(&cpu1);
     initCpu(&cpu2);
+    
+    const char* path = "./programs/fibonacci.casm";
 
-    string_t program = read_file_to_str("./programs/fibonacci.casm");
+    string_t program = read_file_to_str(path);
 
-    const Executable exec = assemble(from_str_slice(program));
+    const Executable exec = assemble(from_str_slice(program), from_cstr_slice(path, strlen(path)));
 
     // load compiled assembly into cpu1
     loadProgram(&cpu1, exec.executable, exec.size);

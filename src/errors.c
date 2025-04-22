@@ -136,12 +136,12 @@ static void printWarningHelpMsg(ParserWarning warning, Token* tok) {
     }
 }
 
-void printError(Token* tok, ParserError error, slice_t line, size_t line_nr) {
+void printError(Token* tok, ParserError error, slice_t path, slice_t line, size_t line_nr) {
     printf("\e[1;31mERROR\e[1;37m: ");
 
     printErrorMsg(error, tok);
 
-    printf("\n    \e[0;34m-->\e[0m file_path/file.c:%lu:%lu\n", line_nr, tok->char_nr);
+    printf("\n    \e[0;34m-->\e[0m %.*s:%lu:%lu\n", (int)path.len, path.str, line_nr, tok->char_nr);
     printf("\e[0;34m     |\n");
     printf("%4lu |  \e[0m%.*s\n", line_nr, (int)line.len, line.str);
 
@@ -152,12 +152,12 @@ void printError(Token* tok, ParserError error, slice_t line, size_t line_nr) {
     printf("\e[0m");
 }
 
-void printWarning(Token* tok, ParserWarning warning, slice_t line, size_t line_nr) {
+void printWarning(Token* tok, ParserWarning warning, slice_t path, slice_t line, size_t line_nr) {
     printf("\e[1;33mWARNING\e[1;37m: ");
 
     printWarningMsg(warning, tok);
 
-    printf("\n    \e[0;34m-->\e[0m file_path/file.c:%lu:%lu\n", line_nr, tok->char_nr);
+    printf("\n    \e[0;34m-->\e[0m %.*s:%lu:%lu\n", (int)path.len, path.str, line_nr, tok->char_nr);
     printf("\e[0;34m     |\n");
     printf("%4lu |  \e[0m%.*s\n", line_nr, (int)line.len, line.str);
 

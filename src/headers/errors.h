@@ -21,7 +21,7 @@ typedef enum {
     U8_OVERFLOW_W,
 } ParserWarning;
 
-void printWarning(Token* tok, ParserWarning warning, slice_t line, size_t line_nr);
-void printError(Token* tok, ParserError error, slice_t line, size_t line_nr);
+void printWarning(Token* tok, ParserWarning warning, slice_t path, slice_t line, size_t line_nr);
+void printError(Token* tok, ParserError error, slice_t path, slice_t line, size_t line_nr);
 
 #endif

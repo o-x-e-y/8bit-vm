@@ -20,7 +20,7 @@ Assembler assembler;
         if (new_token == NULL || is_token_comment(new_token->tok)) {                           \
             PUSH_OP(OP_##opcode);                                                              \
         } else {                                                                               \
-            printError(new_token, OP_DOESNT_USE_OPERAND_E, assembler.line, assembler.line_nr); \
+            printError(new_token, OP_DOESNT_USE_OPERAND_E, assembler.path, assembler.line, assembler.line_nr); \
         }                                                                                      \
     } while (0)
 
@@ -75,7 +75,8 @@ Assembler assembler;
         PUSH_OP(OP_##op##_##dst); \
         break;
 
-static void initAssembler(Assembler* assembler) {
+static void initAssembler(Assembler* assembler, slice_t filename) {
+    assembler->path = filename;
     assembler->line_nr = 0;
     assembler->line = (slice_t){.str = NULL, .len = 0};
     assembler->label_ref_list = new_vec(10, sizeof(LabelRef));
@@ -101,7 +102,7 @@ static inline Token* nextToken(vec_iter_t* token_line) {
     assert(token != prev_token);
 
     if (token == NULL) {
-        printError(prev_token, UNEXPECTED_EOL_E, assembler.line, assembler.line_nr);
+        printError(prev_token, UNEXPECTED_EOL_E, assembler.path, assembler.line, assembler.line_nr);
     }
     return token;
 }
@@ -142,20 +143,20 @@ static MemExpr parse_mem_expr(vec_iter_t token_line, TokenSymbol end) {
                 break;
             case L_T:
                 if (expr.mode == L_MM || expr.mode == HL_MM) {
-                    printError(token, MULTIPLE_MEMORY_E, assembler.line, assembler.line_nr);
+                    printError(token, MULTIPLE_MEMORY_E, assembler.path, assembler.line, assembler.line_nr);
                     return (MemExpr){0};
                 }
                 expr.mode = L_MM;
                 break;
             case HL_T:
                 if (expr.mode == L_MM || expr.mode == HL_MM) {
-                    printError(token, MULTIPLE_MEMORY_E, assembler.line, assembler.line_nr);
+                    printError(token, MULTIPLE_MEMORY_E, assembler.path, assembler.line, assembler.line_nr);
                     return (MemExpr){0};
                 }
                 expr.mode = HL_MM;
                 break;
             default:
-                printError(token, EXPECTED_EXPR_E, assembler.line, assembler.line_nr);
+                printError(token, EXPECTED_EXPR_E, assembler.path, assembler.line, assembler.line_nr);
                 return (MemExpr){0};
         }
 
@@ -176,12 +177,11 @@ static MemExpr parse_mem_expr(vec_iter_t token_line, TokenSymbol end) {
                     }
                     return expr;
                 } else {
-                    printError(token, NONMATCHING_CLOSING_PAREN_E, assembler.line,
-                               assembler.line_nr);
+                    printError(token, NONMATCHING_CLOSING_PAREN_E, assembler.path, assembler.line,                          assembler.line_nr);
                     return (MemExpr){0};
                 }
             default:
-                printError(token, EXPECTED_EXPR_OP_E, assembler.line, assembler.line_nr);
+                printError(token, EXPECTED_EXPR_OP_E, assembler.path, assembler.line, assembler.line_nr);
                 return (MemExpr){0};
         }
     }
@@ -199,7 +199,7 @@ static MemExpr parse_mem_addr(Token* prev_token, vec_iter_t token_line) {
                 return parse_mem_expr(token_line, R_SQUARE_T);
             }
 
-            printError(token, UNEXPECTED_TOKEN_E, assembler.line, assembler.line_nr);
+            printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line, assembler.line_nr);
 
             return (MemExpr){0};
         case L_PAREN_T:
@@ -292,7 +292,7 @@ static void parse_load(vec_iter_t token_line) {
             assert(0 && "LOADING FROM STACK IS NOT IMPLEMENTED YET");
             break;
         default:
-            printError(token, UNEXPECTED_TOKEN_E, assembler.line, assembler.line_nr);
+            printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line, assembler.line_nr);
             break;
     }
 }
@@ -312,7 +312,7 @@ static inline void parse_store(vec_iter_t token_line) {
             assert(0 && "STORING IN STACK IS NOT IMPLEMENTED YET");
             break;
         default:
-            printError(token, UNEXPECTED_TOKEN_E, assembler.line, assembler.line_nr);
+            printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line, assembler.line_nr);
             break;
     }
 }
@@ -338,7 +338,7 @@ static inline void parse_xch(vec_iter_t token_line) {
             assert(0 && "EXCHANGING WITH STACK IS NOT IMPLEMENTED YET");
             break;
         default:
-            printError(token, UNEXPECTED_TOKEN_E, assembler.line, assembler.line_nr);
+            printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line, assembler.line_nr);
             break;
     }
 }
@@ -421,7 +421,7 @@ static inline void parse_xch(vec_iter_t token_line) {
                 assert(0 && "OPERATIONS ON STACK ARE NOT IMPLEMENTED YET");               \
                 break;                                                                    \
             default:                                                                      \
-                printError(token, UNEXPECTED_TOKEN_E, assembler.line, assembler.line_nr); \
+                printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line, assembler.line_nr); \
                 break;                                                                    \
         }                                                                                 \
     }
@@ -446,7 +446,7 @@ static inline void parse_xch(vec_iter_t token_line) {
                 assert(0 && "OPERATIONS ON STACK ARE NOT IMPLEMENTED YET");               \
                 break;                                                                    \
             default:                                                                      \
-                printError(token, UNEXPECTED_TOKEN_E, assembler.line, assembler.line_nr); \
+                printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line, assembler.line_nr); \
                 break;                                                                    \
         }                                                                                 \
     }
@@ -474,7 +474,7 @@ static inline void parse_xch(vec_iter_t token_line) {
                 assert(0 && "OPERATIONS ON STACK ARE NOT IMPLEMENTED YET");               \
                 break;                                                                    \
             default:                                                                      \
-                printError(token, UNEXPECTED_TOKEN_E, assembler.line, assembler.line_nr); \
+                printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line, assembler.line_nr); \
                 break;                                                                    \
         }                                                                                 \
     }
@@ -503,7 +503,7 @@ static inline void parse_xch(vec_iter_t token_line) {
                 assert(0 && "OPERATIONS ON STACK ARE NOT IMPLEMENTED YET");               \
                 break;                                                                    \
             default:                                                                      \
-                printError(token, UNEXPECTED_TOKEN_E, assembler.line, assembler.line_nr); \
+                printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line, assembler.line_nr); \
                 break;                                                                    \
         }                                                                                 \
     }
@@ -527,7 +527,7 @@ static inline void parse_xch(vec_iter_t token_line) {
                 break;                                                                    \
             }                                                                             \
             default:                                                                      \
-                printError(token, UNEXPECTED_TOKEN_E, assembler.line, assembler.line_nr); \
+                printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line, assembler.line_nr); \
                 break;                                                                    \
         }                                                                                 \
     }
@@ -568,19 +568,19 @@ static inline void parse_jext(vec_iter_t token_line) {
                             break;
                         }
                         default:
-                            printError(token, UNEXPECTED_TOKEN_E, assembler.line,
+                            printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line,
                                        assembler.line_nr);
                             break;
                     }
                     break;
                 default:
-                    printError(token, EXPECTED_COMMA_E, assembler.line, assembler.line_nr);
+                    printError(token, EXPECTED_COMMA_E, assembler.path, assembler.line, assembler.line_nr);
                     break;
             }
             break;
 
         default:
-            printError(token, UNEXPECTED_TOKEN_E, assembler.line, assembler.line_nr);
+            printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line, assembler.line_nr);
             break;
     }
 }
@@ -609,7 +609,7 @@ static inline void parse_push(vec_iter_t token_line) {
             parse_mem_addr(token, token_line);
             break;
         default:
-            printError(token, UNEXPECTED_TOKEN_E, assembler.line, assembler.line_nr);
+            printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line, assembler.line_nr);
             break;
     }
 }
@@ -631,7 +631,7 @@ static inline void parse_pop(vec_iter_t token_line) {
             parse_mem_addr(token, token_line);
             break;
         default:
-            printError(token, UNEXPECTED_TOKEN_E, assembler.line, assembler.line_nr);
+            printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line, assembler.line_nr);
             break;
     }
 }
@@ -657,7 +657,7 @@ static inline void parse_call(vec_iter_t token_line) {
             break;
         }
         default:
-            printError(token, UNEXPECTED_TOKEN_E, assembler.line, assembler.line_nr);
+            printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line, assembler.line_nr);
             break;
     }
 }
@@ -675,7 +675,7 @@ static inline void parse_enter(vec_iter_t token_line) {
             PUSH_IMM8(parse_immediate(token));
             break;
         default:
-            printError(token, UNEXPECTED_TOKEN_E, assembler.line, assembler.line_nr);
+            printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line, assembler.line_nr);
             break;
     }
 }
@@ -823,10 +823,10 @@ static void assembleLinePass1(TokenLine* line) {
             PARSE_SHIFT_ALU(MAX);
             break;
         case UNKNOWN_T:
-            printError(token, UNKNOWN_TOKEN_E, assembler.line, assembler.line_nr);
+            printError(token, UNKNOWN_TOKEN_E, assembler.path, assembler.line, assembler.line_nr);
             while ((token = iter_next(&token_line))) {
                 if (is_token_unknown(token->tok))
-                    printError(token, UNKNOWN_TOKEN_E, assembler.line, assembler.line_nr);
+                    printError(token, UNKNOWN_TOKEN_E, assembler.path, assembler.line, assembler.line_nr);
             }
             break;
         case INTEGER_T:
@@ -836,7 +836,7 @@ static void assembleLinePass1(TokenLine* line) {
             do {
                 uint16_t imm = parse_immediate(token);
                 if (imm > 255)
-                    printWarning(token, U8_OVERFLOW_W, assembler.line, assembler.line_nr);
+                    printWarning(token, U8_OVERFLOW_W, assembler.path, assembler.line, assembler.line_nr);
 
                 PUSH_IMM8(imm);
             } while ((token = iter_next(&token_line)) && is_token_immediate(token->tok));
@@ -877,7 +877,7 @@ static void assembleLinePass1(TokenLine* line) {
         case R_PAREN_T:
         case L_CURLY_T:
         case R_CURLY_T:
-            printError(token, EXPECTED_OPERATOR_E, assembler.line, assembler.line_nr);
+            printError(token, EXPECTED_OPERATOR_E, assembler.path, assembler.line, assembler.line_nr);
     }
 }
 
@@ -905,7 +905,7 @@ static void assemblePass2() {
 
         if (idx == NULL) {
             Token tok = (Token){.tok = LABEL_REF_T, .char_nr = ref->col_nr, .substr = ref->label};
-            printError(&tok, UNDEFINED_LABEL_E, ref->line, ref->line_nr);
+            printError(&tok, UNDEFINED_LABEL_E, assembler.path, ref->line, ref->line_nr);
         } else {
             size_t idx_jmp_from_high = ref->idx;     // label location high byte
             size_t idx_jmp_from_low = ref->idx + 1;  // low byte
@@ -924,8 +924,8 @@ static void assemblePass2() {
     }
 }
 
-Executable assemble(slice_t program) {
-    initAssembler(&assembler);
+Executable assemble(slice_t program, slice_t filename) {
+    initAssembler(&assembler, filename);
 
     TokenLines lines = tokenizeProgram(program);
 
