@@ -3,7 +3,7 @@
 
 ; ET
 
-LOAD 24
+LOAD 35
 STORE L
 
 CALL .nth_fib
@@ -46,10 +46,10 @@ n_case:
     CALL .nth_fib   ; call function with n - 2
     
     POP ACC         ; HL now contains fib(n-2), pop lower byte of fib(n-1) into accumulator
-    ADD L           ; add lower bytes, activates the carry flag which we need for the higher bytes
+    ADD L           ; add lower bytes, might activate carry flag which we need for the higher bytes
     STORE L         ; store final calculated byte in L
     POP ACC         ; pop higher byte of fib(n-1) into accumulator
-    ADC H           ; add higher bytes + carry bit if the lower bytes are > 256
+    ADC H           ; add higher bytes + carry bit if the lower byte was > 256
     STORE H         ; store final calculated byte in H
     RET             ; HL now contains the return value of the whole function
     
