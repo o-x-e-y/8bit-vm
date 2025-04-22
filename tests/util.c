@@ -1,4 +1,5 @@
 #include "util.h"
+
 #include <string.h>
 
 void initTestCpu(CPU* cpu, Opcode op) {
@@ -10,7 +11,7 @@ void initTestCpu(CPU* cpu, Opcode op) {
     cpu->program_counter = 8;
     cpu->flags = 123;
     cpu->baseptr = 2;
-    
+
     cpu->memory[cpu->program_counter] = op;
 
     for (int i = 1; i < 4; ++i) {
@@ -26,9 +27,8 @@ bool cpus_eq(CPU* cpu1, CPU* cpu2) {
         cpu1->registers.reg_L != cpu2->registers.reg_L ||
         cpu1->program_counter != cpu2->program_counter || cpu1->flags != cpu2->flags ||
         cpu1->stackptr != cpu2->stackptr || cpu1->baseptr != cpu2->baseptr ||
-        strncmp((const char*)cpu1->stack, (const char*)cpu2->stack, STACK_SIZE) ||
-        strncmp((const char*)cpu1->memory, (const char*)cpu2->memory, MEMORY_SIZE)
-    ) {
+        memcmp(cpu1->stack, cpu2->stack, STACK_SIZE) ||
+        memcmp(cpu1->memory, cpu2->memory, MEMORY_SIZE)) {
         return false;
     }
     return true;
