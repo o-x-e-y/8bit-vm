@@ -16,7 +16,7 @@ typedef struct {
 
 typedef struct {
     char* ptr;
-    const char* end;
+    char* end;
 } str_iter_t;
 
 string_t new_str(size_t capacity);

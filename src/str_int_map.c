@@ -28,23 +28,23 @@ int inline cmp_str(slice_t lhs, slice_t rhs) {
     return strncmp(lhs.str, rhs.str, lhs.len);
 }
 
-map_t inline new_map() {
-    return (map_t){
+si_map_t inline new_map() {
+    return (si_map_t){
         .capacity = DEFAULT_MAP_CAPACITY,
         .len = 0,
-        .buckets = (bucket_t*)calloc(DEFAULT_MAP_CAPACITY, sizeof(bucket_t)),
+        .buckets = (si_bucket_t*)calloc(DEFAULT_MAP_CAPACITY, sizeof(si_bucket_t)),
     };
 }
 
-static inline map_t new_map_with_capacity(size_t capacity) {
-    return (map_t){
+static inline si_map_t new_map_with_capacity(size_t capacity) {
+    return (si_map_t){
         .capacity = capacity,
         .len = 0,
-        .buckets = (bucket_t*)calloc(capacity, sizeof(bucket_t)),
+        .buckets = (si_bucket_t*)calloc(capacity, sizeof(si_bucket_t)),
     };
 }
 
-static size_t* get_bucket(const bucket_t* bucket, slice_t key) {
+static size_t* get_bucket(const si_bucket_t* bucket, slice_t key) {
     if (bucket == NULL) {
         return NULL;
     }
@@ -63,16 +63,16 @@ static size_t* get_bucket(const bucket_t* bucket, slice_t key) {
     return NULL;
 }
 
-size_t* get_map(const map_t* map, slice_t key) {
+size_t* get_map(const si_map_t* map, slice_t key) {
     size_t idx = hash_str(key) % map->capacity;
 
     return get_bucket(&map->buckets[idx], key);
 }
 
-static bool insert_bucket(bucket_t* bucket, slice_t key, size_t value) {
+static bool insert_bucket(si_bucket_t* bucket, slice_t key, size_t value) {
     if (bucket == NULL) {
         slice_t new = (slice_t){.str = strndup(key.str, key.len), .len = key.len};
-        *bucket = (bucket_t){.key = new, .value = value, .prev = NULL, .next = NULL};
+        *bucket = (si_bucket_t){.key = new, .value = value, .prev = NULL, .next = NULL};
         return true;
     }
 
@@ -87,7 +87,7 @@ static bool insert_bucket(bucket_t* bucket, slice_t key, size_t value) {
             return false;
         }
         if (bucket->next == NULL) {
-            bucket_t* new = (bucket_t*)malloc(1 * sizeof(bucket_t));
+            si_bucket_t* new = (si_bucket_t*)malloc(1 * sizeof(si_bucket_t));
 
             new->key.str = strndup(key.str, key.len);
             new->key.len = key.len;
@@ -104,12 +104,12 @@ static bool insert_bucket(bucket_t* bucket, slice_t key, size_t value) {
     exit(1);
 }
 
-bool insert_map(map_t* map, slice_t key, size_t value) {
+bool insert_map(si_map_t* map, slice_t key, size_t value) {
     // Grow if length > 0.75 * capacity
     if (map->len > map->capacity / 4 * 3) {
-        map_t new = new_map_with_capacity(map->capacity * 2);
+        si_map_t new = new_map_with_capacity(map->capacity * 2);
 
-        bucket_t* bucket;
+        si_bucket_t* bucket;
 
         for (size_t i = 0; i < map->capacity; ++i) {
             bucket = &map->buckets[i];
@@ -135,7 +135,7 @@ bool insert_map(map_t* map, slice_t key, size_t value) {
     return false;
 }
 
-static bool remove_bucket(bucket_t* bucket, slice_t key) {
+static bool remove_bucket(si_bucket_t* bucket, slice_t key) {
     if (bucket == NULL) {
         return false;
     }
@@ -173,18 +173,18 @@ static bool remove_bucket(bucket_t* bucket, slice_t key) {
     return false;
 }
 
-bool remove_map(map_t* map, slice_t key) {
+bool remove_map(si_map_t* map, slice_t key) {
     size_t idx = hash_str(key) % map->capacity;
 
     return remove_bucket(&map->buckets[idx], key);
 }
 
-void clear_map(map_t* map) {
+void clear_map(si_map_t* map) {
     free_map(map);
     *map = new_map();
 }
 
-static void free_bucket(bucket_t* bucket) {
+static void free_bucket(si_bucket_t* bucket) {
     assert(bucket != NULL);
 
     do {
@@ -194,7 +194,7 @@ static void free_bucket(bucket_t* bucket) {
     } while ((bucket = bucket->next));
 }
 
-void free_map(map_t* map) {
+void free_map(si_map_t* map) {
     assert(map != NULL);
 
     if (map->buckets == NULL) {
@@ -209,28 +209,28 @@ void free_map(map_t* map) {
     map = NULL;
 }
 
-map_iter_t iter_from_map(const map_t* map) {
+si_map_iter_t iter_from_map(const si_map_t* map) {
     assert(map != NULL);
 
-    const bucket_t* end = &map->buckets[map->capacity - 1];
+    const si_bucket_t* end = &map->buckets[map->capacity - 1];
 
-    return (map_iter_t){
+    return (si_map_iter_t){
         .ptr = map->buckets,
         .end = end,
         .bucket_idx = 0,
     };
 }
 
-kv map_iter_peek(const map_iter_t* iter) {
+si_kv map_iter_peek(const si_map_iter_t* iter) {
     assert(iter != NULL);
 
-    bucket_t* ptr = (bucket_t*)iter->ptr;
+    si_bucket_t* ptr = (si_bucket_t*)iter->ptr;
 
     while (ptr->key.str == NULL && ptr != iter->end) {
         ptr++;
     }
     if (ptr == iter->end) {
-        return (kv){.key = (slice_t){.len = 0, .str = NULL}, .value = 0};
+        return (si_kv){.key = (slice_t){.len = 0, .str = NULL}, .value = 0};
     }
     for (size_t i = 0; i < iter->bucket_idx; ++i) {
         if (ptr->next != NULL) {
@@ -240,21 +240,21 @@ kv map_iter_peek(const map_iter_t* iter) {
             exit(1);
         }
     }
-    return (kv){.key = ptr->key, .value = ptr->value};
+    return (si_kv){.key = ptr->key, .value = ptr->value};
 }
 
-kv map_iter_next(map_iter_t* iter) {
+si_kv map_iter_next(si_map_iter_t* iter) {
     assert(iter != NULL);
 
     // printf("bucket idx: %lu\n", iter->bucket_idx);
 
-    bucket_t* bucketptr = (bucket_t*)iter->ptr;
+    si_bucket_t* bucketptr = (si_bucket_t*)iter->ptr;
 
     while (bucketptr->key.str == NULL && bucketptr != iter->end) {
         bucketptr++;
     }
     if (bucketptr == iter->end) {
-        return (kv)(kv){.key = (slice_t){.len = 0, .str = NULL}, .value = 0};
+        return (si_kv)(si_kv){.key = (slice_t){.len = 0, .str = NULL}, .value = 0};
         ;
     }
     for (size_t i = 0; i < iter->bucket_idx; ++i) {
@@ -273,5 +273,5 @@ kv map_iter_next(map_iter_t* iter) {
         iter->bucket_idx = 0;
         iter->ptr++;
     }
-    return (kv){.key = bucketptr->key, .value = bucketptr->value};
+    return (si_kv){.key = bucketptr->key, .value = bucketptr->value};
 }

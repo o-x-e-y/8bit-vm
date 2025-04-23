@@ -36,7 +36,7 @@ typedef struct Assembler {
     slice_t path;
     size_t line_nr;
     slice_t line;
-    map_t label_def_map;
+    si_map_t label_def_map;
     vec_t label_ref_list;
     vec_t compiled;
 } Assembler;
