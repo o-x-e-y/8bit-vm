@@ -7,13 +7,13 @@ unit_tests:
     - unit-tests
   image: ubuntu:latest
   before_script:
-    - apt-get update -qq && apt-get install -y -qq make build-essential gawk
+    - apt-get update -qq && apt-get install -y -qq make build-essential gawk curl
     # Download the TAP conversion script
     - curl -O https://raw.githubusercontent.com/silentbicycle/greatest/refs/heads/release/contrib/entapment
     - chmod +x entapment
   script:
     # Run tests through the AWK TAP converter
-    - make test | ./entapment > test_results.tap
+    - make test | awk -f ./entapment > test_results.tap
     # Fail job if TAP output contains failures (GitLab CI doesn't do this automatically)
     - '! grep -q "^not ok" test_results.tap'
   artifacts:
