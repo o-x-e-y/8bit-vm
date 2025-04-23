@@ -694,3 +694,20 @@ void printStack(CPU* cpu, uint8_t size) {
     }
     printf("^ SP\n");
 }
+
+void printTokenLines(TokenLines* tokenLines) {
+    vec_iter_t lineIter = iter_from_vec(&tokenLines->lines);
+
+    TokenLine* line;
+    Token* token;
+
+    while ((line = iter_next(&lineIter))) {
+        vec_iter_t tokenIter = iter_from_vec(&line->tokens);
+        while ((token = iter_next(&tokenIter))) {
+            printf("tok: ");
+            printToken(token);
+            printf(" \"%.*s\"\n", (int)token->substr.len, token->substr.str);
+        }
+        printf("\n");
+    }
+}
