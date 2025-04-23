@@ -14,14 +14,14 @@
 
 Assembler assembler;
 
-#define HANDLE_BASIC_OP(opcode)                                                                \
-    do {                                                                                       \
-        Token* new_token = iter_next(&token_line);                                             \
-        if (new_token == NULL || is_token_comment(new_token->tok)) {                           \
-            PUSH_OP(OP_##opcode);                                                              \
-        } else {                                                                               \
-            printError(new_token, OP_DOESNT_USE_OPERAND_E, assembler.path, assembler.line, assembler.line_nr); \
-        }                                                                                      \
+#define HANDLE_BASIC_OP(opcode)                                         \
+    do {                                                                \
+        Token* new_token = iter_next(&token_line);                      \
+        if (new_token == NULL || is_token_comment(new_token->tok)) {    \
+            PUSH_OP(OP_##opcode);                                       \
+        } else {                                                        \
+            printError(new_token, OP_DOESNT_USE_OPERAND_E, &assembler); \
+        }                                                               \
     } while (0)
 
 #define PUSH_OP(opcode)                     \
@@ -102,7 +102,7 @@ static inline Token* nextToken(vec_iter_t* token_line) {
     assert(token != prev_token);
 
     if (token == NULL) {
-        printError(prev_token, UNEXPECTED_EOL_E, assembler.path, assembler.line, assembler.line_nr);
+        printError(prev_token, UNEXPECTED_EOL_E, &assembler);
     }
     return token;
 }
@@ -143,20 +143,20 @@ static MemExpr parse_mem_expr(vec_iter_t token_line, TokenSymbol end) {
                 break;
             case L_T:
                 if (expr.mode == L_MM || expr.mode == HL_MM) {
-                    printError(token, MULTIPLE_MEMORY_E, assembler.path, assembler.line, assembler.line_nr);
+                    printError(token, MULTIPLE_MEMORY_E, &assembler);
                     return (MemExpr){0};
                 }
                 expr.mode = L_MM;
                 break;
             case HL_T:
                 if (expr.mode == L_MM || expr.mode == HL_MM) {
-                    printError(token, MULTIPLE_MEMORY_E, assembler.path, assembler.line, assembler.line_nr);
+                    printError(token, MULTIPLE_MEMORY_E, &assembler);
                     return (MemExpr){0};
                 }
                 expr.mode = HL_MM;
                 break;
             default:
-                printError(token, EXPECTED_EXPR_E, assembler.path, assembler.line, assembler.line_nr);
+                printError(token, EXPECTED_EXPR_E, &assembler);
                 return (MemExpr){0};
         }
 
@@ -177,11 +177,11 @@ static MemExpr parse_mem_expr(vec_iter_t token_line, TokenSymbol end) {
                     }
                     return expr;
                 } else {
-                    printError(token, NONMATCHING_CLOSING_PAREN_E, assembler.path, assembler.line,                          assembler.line_nr);
+                    printError(token, NONMATCHING_CLOSING_PAREN_E, &assembler);
                     return (MemExpr){0};
                 }
             default:
-                printError(token, EXPECTED_EXPR_OP_E, assembler.path, assembler.line, assembler.line_nr);
+                printError(token, EXPECTED_EXPR_OP_E, &assembler);
                 return (MemExpr){0};
         }
     }
@@ -199,7 +199,7 @@ static MemExpr parse_mem_addr(Token* prev_token, vec_iter_t token_line) {
                 return parse_mem_expr(token_line, R_SQUARE_T);
             }
 
-            printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line, assembler.line_nr);
+            printError(token, UNEXPECTED_TOKEN_E, &assembler);
 
             return (MemExpr){0};
         case L_PAREN_T:
@@ -292,7 +292,7 @@ static void parse_load(vec_iter_t token_line) {
             assert(0 && "LOADING FROM STACK IS NOT IMPLEMENTED YET");
             break;
         default:
-            printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line, assembler.line_nr);
+            printError(token, UNEXPECTED_TOKEN_E, &assembler);
             break;
     }
 }
@@ -312,7 +312,7 @@ static inline void parse_store(vec_iter_t token_line) {
             assert(0 && "STORING IN STACK IS NOT IMPLEMENTED YET");
             break;
         default:
-            printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line, assembler.line_nr);
+            printError(token, UNEXPECTED_TOKEN_E, &assembler);
             break;
     }
 }
@@ -338,7 +338,7 @@ static inline void parse_xch(vec_iter_t token_line) {
             assert(0 && "EXCHANGING WITH STACK IS NOT IMPLEMENTED YET");
             break;
         default:
-            printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line, assembler.line_nr);
+            printError(token, UNEXPECTED_TOKEN_E, &assembler);
             break;
     }
 }
@@ -397,139 +397,139 @@ static inline void parse_xch(vec_iter_t token_line) {
         }                                                 \
     }; break;
 
-#define PARSE_ACC_ALU(op)                                                                 \
-    {                                                                                     \
-        Token* token = nextToken(&token_line);                                            \
-        if (token == NULL) return;                                                        \
-                                                                                          \
-        switch (token->tok) {                                                             \
-            PARSE_CASE(op, ACC);                                                          \
-            PARSE_CASE(op, R0);                                                           \
-            PARSE_CASE(op, R1);                                                           \
-            PARSE_CASE(op, H);                                                            \
-            PARSE_CASE(op, L);                                                            \
-            PARSE_ALU_CASE_LABEL_IDX(op);                                                 \
-            PARSE_ALU_CASE_L_PAREN(op);                                                   \
-            case BINARY_T:                                                                \
-            case OCTAL_T:                                                                 \
-            case INTEGER_T:                                                               \
-            case HEXADECIMAL_T:                                                           \
-                PUSH_OP(OP_##op##_I);                                                     \
-                PUSH_IMM8(parse_immediate(token));                                        \
-                break;                                                                    \
-            case L_SQUARE_T:                                                              \
-                assert(0 && "OPERATIONS ON STACK ARE NOT IMPLEMENTED YET");               \
-                break;                                                                    \
-            default:                                                                      \
-                printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line, assembler.line_nr); \
-                break;                                                                    \
-        }                                                                                 \
+#define PARSE_ACC_ALU(op)                                                   \
+    {                                                                       \
+        Token* token = nextToken(&token_line);                              \
+        if (token == NULL) return;                                          \
+                                                                            \
+        switch (token->tok) {                                               \
+            PARSE_CASE(op, ACC);                                            \
+            PARSE_CASE(op, R0);                                             \
+            PARSE_CASE(op, R1);                                             \
+            PARSE_CASE(op, H);                                              \
+            PARSE_CASE(op, L);                                              \
+            PARSE_ALU_CASE_LABEL_IDX(op);                                   \
+            PARSE_ALU_CASE_L_PAREN(op);                                     \
+            case BINARY_T:                                                  \
+            case OCTAL_T:                                                   \
+            case INTEGER_T:                                                 \
+            case HEXADECIMAL_T:                                             \
+                PUSH_OP(OP_##op##_I);                                       \
+                PUSH_IMM8(parse_immediate(token));                          \
+                break;                                                      \
+            case L_SQUARE_T:                                                \
+                assert(0 && "OPERATIONS ON STACK ARE NOT IMPLEMENTED YET"); \
+                break;                                                      \
+            default:                                                        \
+                printError(token, UNEXPECTED_TOKEN_E, &assembler);          \
+                break;                                                      \
+        }                                                                   \
     }
 
-#define PARSE_HL_ALU(op)                                                                  \
-    {                                                                                     \
-        Token* token = nextToken(&token_line);                                            \
-        if (token == NULL) return;                                                        \
-                                                                                          \
-        switch (token->tok) {                                                             \
-            PARSE_CASE(op, ACC);                                                          \
-            PARSE_CASE(op, R0);                                                           \
-            PARSE_CASE(op, R1);                                                           \
-            PARSE_CASE(op, H);                                                            \
-            PARSE_CASE(op, L);                                                            \
-            PARSE_CASE(op, HL);                                                           \
-            case L_PAREN_T:                                                               \
-                assert(0 && "OPERATIONS ON MEMORY ARE NOT IMPLEMENTED YET");              \
-                parse_mem_addr(token, token_line);                                        \
-                break;                                                                    \
-            case L_SQUARE_T:                                                              \
-                assert(0 && "OPERATIONS ON STACK ARE NOT IMPLEMENTED YET");               \
-                break;                                                                    \
-            default:                                                                      \
-                printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line, assembler.line_nr); \
-                break;                                                                    \
-        }                                                                                 \
+#define PARSE_HL_ALU(op)                                                     \
+    {                                                                        \
+        Token* token = nextToken(&token_line);                               \
+        if (token == NULL) return;                                           \
+                                                                             \
+        switch (token->tok) {                                                \
+            PARSE_CASE(op, ACC);                                             \
+            PARSE_CASE(op, R0);                                              \
+            PARSE_CASE(op, R1);                                              \
+            PARSE_CASE(op, H);                                               \
+            PARSE_CASE(op, L);                                               \
+            PARSE_CASE(op, HL);                                              \
+            case L_PAREN_T:                                                  \
+                assert(0 && "OPERATIONS ON MEMORY ARE NOT IMPLEMENTED YET"); \
+                parse_mem_addr(token, token_line);                           \
+                break;                                                       \
+            case L_SQUARE_T:                                                 \
+                assert(0 && "OPERATIONS ON STACK ARE NOT IMPLEMENTED YET");  \
+                break;                                                       \
+            default:                                                         \
+                printError(token, UNEXPECTED_TOKEN_E, &assembler);           \
+                break;                                                       \
+        }                                                                    \
     }
 
-#define PARSE_SHIFT_ALU(op)                                                               \
-    {                                                                                     \
-        Token* token = nextToken(&token_line);                                            \
-        if (token == NULL) return;                                                        \
-                                                                                          \
-        switch (token->tok) {                                                             \
-            PARSE_CASE(op, R0);                                                           \
-            PARSE_CASE(op, R1);                                                           \
-            PARSE_CASE(op, H);                                                            \
-            PARSE_CASE(op, L);                                                            \
-            PARSE_ALU_CASE_LABEL_IDX(op);                                                 \
-            PARSE_ALU_CASE_L_PAREN(op);                                                   \
-            case BINARY_T:                                                                \
-            case OCTAL_T:                                                                 \
-            case INTEGER_T:                                                               \
-            case HEXADECIMAL_T:                                                           \
-                PUSH_OP(OP_##op##_I);                                                     \
-                PUSH_IMM8(parse_immediate(token));                                        \
-                break;                                                                    \
-            case L_SQUARE_T:                                                              \
-                assert(0 && "OPERATIONS ON STACK ARE NOT IMPLEMENTED YET");               \
-                break;                                                                    \
-            default:                                                                      \
-                printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line, assembler.line_nr); \
-                break;                                                                    \
-        }                                                                                 \
+#define PARSE_SHIFT_ALU(op)                                                 \
+    {                                                                       \
+        Token* token = nextToken(&token_line);                              \
+        if (token == NULL) return;                                          \
+                                                                            \
+        switch (token->tok) {                                               \
+            PARSE_CASE(op, R0);                                             \
+            PARSE_CASE(op, R1);                                             \
+            PARSE_CASE(op, H);                                              \
+            PARSE_CASE(op, L);                                              \
+            PARSE_ALU_CASE_LABEL_IDX(op);                                   \
+            PARSE_ALU_CASE_L_PAREN(op);                                     \
+            case BINARY_T:                                                  \
+            case OCTAL_T:                                                   \
+            case INTEGER_T:                                                 \
+            case HEXADECIMAL_T:                                             \
+                PUSH_OP(OP_##op##_I);                                       \
+                PUSH_IMM8(parse_immediate(token));                          \
+                break;                                                      \
+            case L_SQUARE_T:                                                \
+                assert(0 && "OPERATIONS ON STACK ARE NOT IMPLEMENTED YET"); \
+                break;                                                      \
+            default:                                                        \
+                printError(token, UNEXPECTED_TOKEN_E, &assembler);          \
+                break;                                                      \
+        }                                                                   \
     }
 
-#define PARSE_WIDE(op)                                                                    \
-    {                                                                                     \
-        Token* token = nextToken(&token_line);                                            \
-        if (token == NULL) return;                                                        \
-                                                                                          \
-        switch (token->tok) {                                                             \
-            PARSE_CASE(op, ACC);                                                          \
-            PARSE_CASE(op, R0);                                                           \
-            PARSE_CASE(op, R1);                                                           \
-            case BINARY_T:                                                                \
-            case OCTAL_T:                                                                 \
-            case INTEGER_T:                                                               \
-            case HEXADECIMAL_T:                                                           \
-                PUSH_OP(OP_##op##_I);                                                     \
-                PUSH_IMM16(parse_immediate(token));                                       \
-                break;                                                                    \
-            case L_PAREN_T:                                                               \
-                assert(0 && "OPERATIONS ON MEMORY ARE NOT IMPLEMENTED YET");              \
-                parse_mem_addr(token, token_line);                                        \
-                break;                                                                    \
-            case L_SQUARE_T:                                                              \
-                assert(0 && "OPERATIONS ON STACK ARE NOT IMPLEMENTED YET");               \
-                break;                                                                    \
-            default:                                                                      \
-                printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line, assembler.line_nr); \
-                break;                                                                    \
-        }                                                                                 \
+#define PARSE_WIDE(op)                                                       \
+    {                                                                        \
+        Token* token = nextToken(&token_line);                               \
+        if (token == NULL) return;                                           \
+                                                                             \
+        switch (token->tok) {                                                \
+            PARSE_CASE(op, ACC);                                             \
+            PARSE_CASE(op, R0);                                              \
+            PARSE_CASE(op, R1);                                              \
+            case BINARY_T:                                                   \
+            case OCTAL_T:                                                    \
+            case INTEGER_T:                                                  \
+            case HEXADECIMAL_T:                                              \
+                PUSH_OP(OP_##op##_I);                                        \
+                PUSH_IMM16(parse_immediate(token));                          \
+                break;                                                       \
+            case L_PAREN_T:                                                  \
+                assert(0 && "OPERATIONS ON MEMORY ARE NOT IMPLEMENTED YET"); \
+                parse_mem_addr(token, token_line);                           \
+                break;                                                       \
+            case L_SQUARE_T:                                                 \
+                assert(0 && "OPERATIONS ON STACK ARE NOT IMPLEMENTED YET");  \
+                break;                                                       \
+            default:                                                         \
+                printError(token, UNEXPECTED_TOKEN_E, &assembler);           \
+                break;                                                       \
+        }                                                                    \
     }
 
-#define PARSE_JMP(op)                                                                     \
-    {                                                                                     \
-        Token* token = nextToken(&token_line);                                            \
-        if (token == NULL) return;                                                        \
-                                                                                          \
-        switch (token->tok) {                                                             \
-            case BINARY_T:                                                                \
-            case OCTAL_T:                                                                 \
-            case INTEGER_T:                                                               \
-            case HEXADECIMAL_T:                                                           \
-                PUSH_OP(OP_##op);                                                         \
-                PUSH_IMM16(parse_immediate(token));                                       \
-                break;                                                                    \
-            case LABEL_REF_T: {                                                           \
-                PUSH_OP(OP_##op);                                                         \
-                PUSH_LABEL_REF(token);                                                    \
-                break;                                                                    \
-            }                                                                             \
-            default:                                                                      \
-                printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line, assembler.line_nr); \
-                break;                                                                    \
-        }                                                                                 \
+#define PARSE_JMP(op)                                              \
+    {                                                              \
+        Token* token = nextToken(&token_line);                     \
+        if (token == NULL) return;                                 \
+                                                                   \
+        switch (token->tok) {                                      \
+            case BINARY_T:                                         \
+            case OCTAL_T:                                          \
+            case INTEGER_T:                                        \
+            case HEXADECIMAL_T:                                    \
+                PUSH_OP(OP_##op);                                  \
+                PUSH_IMM16(parse_immediate(token));                \
+                break;                                             \
+            case LABEL_REF_T: {                                    \
+                PUSH_OP(OP_##op);                                  \
+                PUSH_LABEL_REF(token);                             \
+                break;                                             \
+            }                                                      \
+            default:                                               \
+                printError(token, UNEXPECTED_TOKEN_E, &assembler); \
+                break;                                             \
+        }                                                          \
     }
 
 static inline void parse_jext(vec_iter_t token_line) {
@@ -568,19 +568,18 @@ static inline void parse_jext(vec_iter_t token_line) {
                             break;
                         }
                         default:
-                            printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line,
-                                       assembler.line_nr);
+                            printError(token, UNEXPECTED_TOKEN_E, &assembler);
                             break;
                     }
                     break;
                 default:
-                    printError(token, EXPECTED_COMMA_E, assembler.path, assembler.line, assembler.line_nr);
+                    printError(token, EXPECTED_COMMA_E, &assembler);
                     break;
             }
             break;
 
         default:
-            printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line, assembler.line_nr);
+            printError(token, UNEXPECTED_TOKEN_E, &assembler);
             break;
     }
 }
@@ -609,7 +608,7 @@ static inline void parse_push(vec_iter_t token_line) {
             parse_mem_addr(token, token_line);
             break;
         default:
-            printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line, assembler.line_nr);
+            printError(token, UNEXPECTED_TOKEN_E, &assembler);
             break;
     }
 }
@@ -631,7 +630,7 @@ static inline void parse_pop(vec_iter_t token_line) {
             parse_mem_addr(token, token_line);
             break;
         default:
-            printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line, assembler.line_nr);
+            printError(token, UNEXPECTED_TOKEN_E, &assembler);
             break;
     }
 }
@@ -657,7 +656,7 @@ static inline void parse_call(vec_iter_t token_line) {
             break;
         }
         default:
-            printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line, assembler.line_nr);
+            printError(token, UNEXPECTED_TOKEN_E, &assembler);
             break;
     }
 }
@@ -675,7 +674,7 @@ static inline void parse_enter(vec_iter_t token_line) {
             PUSH_IMM8(parse_immediate(token));
             break;
         default:
-            printError(token, UNEXPECTED_TOKEN_E, assembler.path, assembler.line, assembler.line_nr);
+            printError(token, UNEXPECTED_TOKEN_E, &assembler);
             break;
     }
 }
@@ -823,10 +822,9 @@ static void assembleLinePass1(TokenLine* line) {
             PARSE_SHIFT_ALU(MAX);
             break;
         case UNKNOWN_T:
-            printError(token, UNKNOWN_TOKEN_E, assembler.path, assembler.line, assembler.line_nr);
+            printError(token, UNKNOWN_TOKEN_E, &assembler);
             while ((token = iter_next(&token_line))) {
-                if (is_token_unknown(token->tok))
-                    printError(token, UNKNOWN_TOKEN_E, assembler.path, assembler.line, assembler.line_nr);
+                if (is_token_unknown(token->tok)) printError(token, UNKNOWN_TOKEN_E, &assembler);
             }
             break;
         case INTEGER_T:
@@ -835,8 +833,7 @@ static void assembleLinePass1(TokenLine* line) {
         case HEXADECIMAL_T:
             do {
                 uint16_t imm = parse_immediate(token);
-                if (imm > 255)
-                    printWarning(token, U8_OVERFLOW_W, assembler.path, assembler.line, assembler.line_nr);
+                if (imm > 255) printWarning(token, U8_OVERFLOW_W, &assembler);
 
                 PUSH_IMM8(imm);
             } while ((token = iter_next(&token_line)) && is_token_immediate(token->tok));
@@ -877,7 +874,7 @@ static void assembleLinePass1(TokenLine* line) {
         case R_PAREN_T:
         case L_CURLY_T:
         case R_CURLY_T:
-            printError(token, EXPECTED_OPERATOR_E, assembler.path, assembler.line, assembler.line_nr);
+            printError(token, EXPECTED_OPERATOR_E, &assembler);
     }
 }
 
@@ -901,11 +898,14 @@ static void assemblePass2() {
     vec_iter_t label_refs = iter_from_vec(&assembler.label_ref_list);
 
     while ((ref = iter_next(&label_refs))) {
+        assembler.line = ref->line;
+        assembler.line_nr = ref->line_nr;
+
         size_t* idx = get_map(&assembler.label_def_map, ref->label);
 
         if (idx == NULL) {
             Token tok = (Token){.tok = LABEL_REF_T, .char_nr = ref->col_nr, .substr = ref->label};
-            printError(&tok, UNDEFINED_LABEL_E, assembler.path, ref->line, ref->line_nr);
+            printError(&tok, UNDEFINED_LABEL_E, &assembler);
         } else {
             size_t idx_jmp_from_high = ref->idx;     // label location high byte
             size_t idx_jmp_from_low = ref->idx + 1;  // low byte

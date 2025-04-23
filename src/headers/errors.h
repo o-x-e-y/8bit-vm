@@ -1,6 +1,7 @@
 #ifndef __OXEY_ERRORS_H__
 #define __OXEY_ERRORS_H__
 
+#include "assembler.h"
 #include "tokenizer.h"
 
 typedef enum {
@@ -21,7 +22,7 @@ typedef enum {
     U8_OVERFLOW_W,
 } ParserWarning;
 
-void printWarning(Token* tok, ParserWarning warning, slice_t path, slice_t line, size_t line_nr);
-void printError(Token* tok, ParserError error, slice_t path, slice_t line, size_t line_nr);
+void printWarning(Token* tok, ParserWarning warning, Assembler* assembler);
+void printError(Token* tok, ParserError error, Assembler* assembler);
 
 #endif

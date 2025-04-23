@@ -46,7 +46,7 @@ TEST assemble_fibonacci(void) {
 
     initCpu(&cpu1);
     initCpu(&cpu2);
-    
+
     const char* path = "./programs/fibonacci.casm";
 
     string_t program = read_file_to_str(path);
