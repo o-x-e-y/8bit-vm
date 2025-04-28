@@ -10,9 +10,9 @@ slice_t from_str_slice(string_t str) { return (slice_t){.len = str.len, .str = s
 
 slice_t copy_slice(slice_t slice) { return (slice_t){.len = slice.len, .str = slice.str}; }
 
-size_t inline len_slice(slice_t slice) { return slice.len; }
+inline size_t len_slice(slice_t slice) { return slice.len; }
 
-char inline get_slice(slice_t slice, size_t index) {
+inline char get_slice(slice_t slice, size_t index) {
     if (index >= slice.len) {
         return 0;
     } else {
@@ -35,7 +35,7 @@ char last_slice(slice_t slice) {
     }
 }
 
-bool inline eq_cstr_slice(slice_t slice, const char* s, size_t len) {
+inline bool eq_cstr_slice(slice_t slice, const char* s, size_t len) {
     assert(s != NULL);
 
     if (slice.len != len) {

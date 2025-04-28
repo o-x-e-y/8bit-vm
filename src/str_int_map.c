@@ -9,7 +9,7 @@
 // FNV 1A 64-bit algorithm from wikipedia:
 // https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
 // Adapted for use on null-terminated strings
-size_t inline hash_str(slice_t key) {
+inline size_t hash_str(slice_t key) {
     uint8_t* str = (uint8_t*)key.str;
     size_t h = FNV_OFFSET_BASIS;
 
@@ -21,14 +21,14 @@ size_t inline hash_str(slice_t key) {
 }
 
 // Just strncmp internally
-int inline cmp_str(slice_t lhs, slice_t rhs) {
+inline int cmp_str(slice_t lhs, slice_t rhs) {
     if (lhs.len != rhs.len) {
         return 1;
     }
     return strncmp(lhs.str, rhs.str, lhs.len);
 }
 
-si_map_t inline new_map() {
+inline si_map_t new_map() {
     return (si_map_t){
         .capacity = DEFAULT_MAP_CAPACITY,
         .len = 0,

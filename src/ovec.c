@@ -10,7 +10,7 @@
 
 static void __grow_vec(vec_t* vec);
 
-vec_t inline new_vec(size_t item_capacity, size_t elem_size) {
+inline vec_t new_vec(size_t item_capacity, size_t elem_size) {
     vec_t res = (vec_t){
         .capacity = item_capacity,
         .elem_size = elem_size,

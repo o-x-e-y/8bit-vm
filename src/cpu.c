@@ -17,7 +17,7 @@ void initCpu(CPU* cpu) {
     SP = 0;
     BP = 0;
 
-    for (int i = 0; i < STACK_SIZE; ++i) {
+    for (size_t i = 0; i < STACK_SIZE; ++i) {
         STACK(i) = 0;
     }
 

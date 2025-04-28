@@ -226,6 +226,7 @@ TokenSymbol tokenizeSymbol(str_iter_t* iter) {
                     if (str_iter_next(iter) == 'A' && str_iter_next(iter) == 'D' &&
                         istokdelim(str_iter_peek(iter)))
                         return LOAD_T;
+                    return unknown(iter);
                 case 0:
                     return L_T;
                 default:

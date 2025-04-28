@@ -8,12 +8,15 @@
 #define INSTRUCTION_WIDTH 8
 
 typedef void (*Instruction)(CPU *cpu);
+#define UNUSED(x) (void)(x)
 #define INSTRUCTION(name) static void name(CPU *cpu)
 #define UPDATE_ZF(src) UPDATE_FLAGS(src == 0, zf)
 #define UPDATE_SF(src) UPDATE_FLAGS(src &SIGN_BIT, sf)
 
 INSTRUCTION(NOOP) { PC++; }
-INSTRUCTION(HALT) {}
+INSTRUCTION(HALT) {
+    UNUSED(cpu);
+}
 INSTRUCTION(EI) {
     PC++;
     FLAGS = set_if(FLAGS);
@@ -626,7 +629,7 @@ MAX(H, H)
 // clang-format off
 
 /// Table containing function pointers to all 256 different operations
-const static Instruction OP_TABLE[256] = {
+static const Instruction OP_TABLE[256] = {
     NOOP,       HALT,       EI,         DI,         ET,         DT,         CLRA,       RESET, 
     LOAD_I,     LOAD_IM,    LOAD_ML,    LOAD_MHL,   LOAD_R0,    LOAD_R1,    LOAD_L,     LOAD_H,
     LOAD_L_I,   STORE_IM,   STORE_ML,   STORE_MHL,  STORE_R0,   STORE_R1,   STORE_L,    STORE_H,

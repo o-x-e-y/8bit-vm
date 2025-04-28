@@ -13,7 +13,7 @@ src-folder := ./src
 test-folder := ./tests
 headers := ./src/headers
 
-debug-flags := -g -O0 -Wall -Wpedantic -lm
+debug-flags := -g -O0 -Wall -Wextra -Wpedantic -lm
 release-flags := -O3 -lm
 valgrind-flags := --leak-check=yes --track-origins=yes -s --leak-check=full --show-leak-kinds=all
 

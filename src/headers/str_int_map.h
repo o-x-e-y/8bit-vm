@@ -43,8 +43,8 @@ int cmp_str(slice_t lhs, slice_t rhs);
 
 si_map_t new_map();
 // si_map_t new_map_with_capacity(size_t capacity);
-size_t inline capacity_map(const si_map_t* map) { return map->capacity; }
-size_t inline len_map(const si_map_t* map) { return map->len; }
+inline size_t capacity_map(const si_map_t* map) { return map->capacity; }
+inline size_t len_map(const si_map_t* map) { return map->len; }
 
 size_t* get_map(const si_map_t* map, slice_t key);
 bool insert_map(si_map_t* map, slice_t key, size_t value);
