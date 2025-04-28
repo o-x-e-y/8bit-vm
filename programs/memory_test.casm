@@ -10,17 +10,8 @@ loop:
     ADD (HL) ; HL already contains the label offset, making this more efficient
     DEC R0
     JNZ .loop
-
-
-; loop:
-;     ; 1 + 16 - 16 = 1
-;     ; first load is `12`
-;     LOAD label[1 + HL + 0x10 - 16]
-;     INC HL
-;     DEC R0      ; 
-;     JNZ .loop
-; 
-; HALT
+    
+HALT 0
 
 label:
-    1 2 3 4 5 12345
+    1 2 3 4 5 1234
