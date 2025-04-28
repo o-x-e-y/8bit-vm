@@ -97,7 +97,7 @@ static void freeAssembler(Assembler* assembler) {
 static inline Token* nextToken(vec_iter_t* token_line) {
     // Relies on invariant that lines contain at least one token, so this will never point to
     // invalid memory when the next token is NULL.
-    Token* prev_token = token_line->ptr - token_line->elem_size;
+    Token* prev_token = (Token*)(token_line->ptr) - 1;
 
     Token* token = iter_next(token_line);
     assert(token != prev_token);
