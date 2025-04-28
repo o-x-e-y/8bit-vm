@@ -285,7 +285,7 @@ str_iter_t iter_from_str(const string_t* str) {
 
     return (str_iter_t){
         .ptr = str->str,
-        .end = end,
+        .end = (char*)end,
     };
 }
 

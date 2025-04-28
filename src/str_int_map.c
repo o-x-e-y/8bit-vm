@@ -254,8 +254,7 @@ si_kv map_iter_next(si_map_iter_t* iter) {
         bucketptr++;
     }
     if (bucketptr == iter->end) {
-        return (si_kv)(si_kv){.key = (slice_t){.len = 0, .str = NULL}, .value = 0};
-        ;
+        return (si_kv){.key = (slice_t){.len = 0, .str = NULL}, .value = 0};
     }
     for (size_t i = 0; i < iter->bucket_idx; ++i) {
         if (bucketptr->next != NULL) {

@@ -6,7 +6,7 @@
 #define STACK_SIZE 256U
 #define MEMORY_SIZE 256 * 256
 #define PROGRAM_START 256U
-#define SIGN_BIT 0b10000000
+#define SIGN_BIT (1 << 7)
 
 #define PC cpu->program_counter
 #define ACC cpu->accumulator

@@ -66,7 +66,7 @@ void debug_slice(slice_t slice) {
 
 str_iter_t iter_from_slice(slice_t slice) {
     char* start = (char*)slice.str;
-    const char* end = slice.str + (slice.len - 1) * sizeof(char);
+    char* end = (char*)(slice.str + (slice.len - 1) * sizeof(char));
 
     return (str_iter_t){
         .ptr = start,
