@@ -68,8 +68,6 @@ static TokenSymbol unknown(str_iter_t* iter) {
 }
 
 TokenSymbol tokenizeSymbol(str_iter_t* iter) {
-    // TokenSymbol error = UNKNOWN_T;
-
     /// Partially generated using trie-gen: https://www.nongnu.org/trie-gen/
     switch (str_iter_next(iter)) {
         case '(':
@@ -177,6 +175,8 @@ TokenSymbol tokenizeSymbol(str_iter_t* iter) {
                     return unknown(iter);
                 case 'L':
                     return HL_T;
+                case 0:
+                    return H_T;
                 default:
                     iter->ptr--;
                     return H_T;
@@ -226,6 +226,8 @@ TokenSymbol tokenizeSymbol(str_iter_t* iter) {
                     if (str_iter_next(iter) == 'A' && str_iter_next(iter) == 'D' &&
                         istokdelim(str_iter_peek(iter)))
                         return LOAD_T;
+                case 0:
+                    return L_T;
                 default:
                     iter->ptr--;
                     return L_T;
