@@ -6,6 +6,7 @@
 #include "oslice.h"
 #include "str_int_map.h"
 #include "tokenizer.h"
+#include "ovec.h"
 
 typedef enum {
     PLUS_EOP = PLUS_T,
@@ -34,6 +35,7 @@ typedef struct {
 
 typedef struct Assembler {
     slice_t path;
+    vec_t token_lines;
     size_t line_nr;
     slice_t line;
     si_map_t label_def_map;

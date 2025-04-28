@@ -537,6 +537,24 @@ bool is_token_op(TokenSymbol token) {
     return false;
 }
 
+bool is_token_register(TokenSymbol token) {
+    switch (token) {
+        case ACC_T:
+        case R0_T:
+        case R1_T:
+        case H_T:
+        case L_T:
+        case HL_T:
+        case SP_T:
+        case BP_T:
+        case PC_T:
+        case FLAGS_T:
+            return true;
+        default:
+            return false;
+    }
+}
+
 bool is_token_addr(TokenSymbol token) {
     switch (token) {
         case ACC_T:
@@ -550,7 +568,9 @@ bool is_token_addr(TokenSymbol token) {
         case PC_T:
         case FLAGS_T:
         case L_SQUARE_T:
+        case R_SQUARE_T:
         case L_PAREN_T:
+        case R_PAREN_T:
             return true;
         default:
             return false;
@@ -564,6 +584,17 @@ bool is_token_comment(TokenSymbol token) { return token == COMMENT_T; }
 bool is_token_label_ref(TokenSymbol token) { return token == LABEL_REF_T; }
 
 bool is_token_label_def(TokenSymbol token) { return token == LABEL_DEF_T; }
+
+bool is_token_label(TokenSymbol token) {
+    switch (token) {
+        case LABEL_REF_T:
+        case LABEL_DEF_T:
+        case LABEL_IDX_T:
+            return true;
+        default:
+            return false;
+    }
+}
 
 bool is_token_immediate(TokenSymbol token) {
     switch (token) {

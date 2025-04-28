@@ -24,5 +24,6 @@ typedef enum {
 
 void printWarning(Token* tok, ParserWarning warning, Assembler* assembler);
 void printError(Token* tok, ParserError error, Assembler* assembler);
+void printHighlightedLine(Assembler* assembler, bool darken);
 
 #endif

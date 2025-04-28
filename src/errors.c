@@ -2,7 +2,9 @@
 
 #include <stdint.h>
 
+#include "headers/oslice.h"
 #include "headers/parse_imm.h"
+#include "headers/tokenizer.h"
 #include "stdio.h"
 
 #define INDICATE_TOKEN_256                                                                         \
@@ -13,6 +15,28 @@
     "                                                                                            " \
     "                                                                                            " \
     "                                                                        "
+// clang-format off
+#define RGB(r, g, b)            "\033[38;2;" #r ";" #g ";" #b "m"
+#define GRUVBOX_RED             RGB(251, 73, 52)
+#define GRUVBOX_GREEN           RGB(184, 187, 38)
+#define GRUVBOX_YELLOW          RGB(250, 189, 47)
+#define GRUVBOX_BLUE            RGB(131, 165, 152)
+#define GRUVBOX_MAGENTA	        RGB(211, 134, 155)
+#define GRUVBOX_CYAN            RGB(142, 192, 124)
+#define GRUVBOX_ORANGE          RGB(254, 128, 25)
+#define GRUVBOX_GREY            RGB(146, 131, 116)
+#define GRUVBOX_DARK_RED        RGB(176, 51, 36)
+#define GRUVBOX_DARK_GREEN      RGB(129, 131, 27)
+#define GRUVBOX_DARK_YELLOW     RGB(175, 132, 33)
+#define GRUVBOX_DARK_BLUE       RGB(92, 116, 106)
+#define GRUVBOX_DARK_MAGENTA    RGB(148, 94, 109)
+#define GRUVBOX_DARK_CYAN       RGB(99, 134, 87)
+#define GRUVBOX_DARK_ORANGE     RGB(178, 90, 18)
+#define GRUVBOX_DARK_GREY       RGB(102, 92, 81)
+#define RESET                   "\033[0m"
+#define BOLD                    "\033[1m"
+
+// clang-format on
 
 static void printErrorMsg(ParserError err, Token* tok) {
     switch (err) {
@@ -97,18 +121,18 @@ static void printErrorHelpMsg(ParserError err) {
 }
 
 static void alignErrorHelpMsg(size_t char_nr, size_t len) {
-    printf("\e[0;34m     |  %.*s", (int)char_nr, SPACES_256);
-    printf("\e[0;31m%.*s help: ", (int)len, INDICATE_TOKEN_256);
+    printf(GRUVBOX_BLUE "     |  %.*s", (int)char_nr, SPACES_256);
+    printf(GRUVBOX_RED "%.*s help: ", (int)len, INDICATE_TOKEN_256);
 }
 
 static void alignWarningHelpMsg(size_t char_nr, size_t len) {
-    printf("\e[0;34m     |  %.*s", (int)char_nr, SPACES_256);
-    printf("\e[0;33m%.*s help: ", (int)len, INDICATE_TOKEN_256);
+    printf(GRUVBOX_BLUE "     |  %.*s", (int)char_nr, SPACES_256);
+    printf(GRUVBOX_YELLOW "%.*s help: ", (int)len, INDICATE_TOKEN_256);
 }
 
 static void alignWarningHelpMsgNewline(size_t char_nr, size_t len) {
-    printf("\e[0;34m     |  %.*s", (int)char_nr, SPACES_256);
-    printf("\e[0;33m%.*s       ", (int)len, SPACES_256);
+    printf(GRUVBOX_BLUE "     |  %.*s", (int)char_nr, SPACES_256);
+    printf(GRUVBOX_YELLOW "%.*s       ", (int)len, SPACES_256);
 }
 
 static void printWarningMsg(ParserWarning warning, Token* tok) {
@@ -136,38 +160,139 @@ static void printWarningHelpMsg(ParserWarning warning, Token* tok) {
     }
 }
 
+void printHighlightedLine(Assembler* assembler, bool darken) {
+    str_iter_t line_iter = iter_from_slice(assembler->line);
+    
+    printf(RESET);
+    
+    TokenLine line = tokenizeLine(&line_iter, assembler->line_nr);
+
+    vec_iter_t token_iter = iter_from_vec(&line.tokens);
+    Token* token;
+
+    printf(RESET);
+
+    size_t last_char_nr = 0;
+    size_t last_len = 0;
+
+    while ((token = iter_next(&token_iter))) {
+        size_t spaces = (token->char_nr - last_char_nr) - last_len;
+        printf("%.*s", (int)spaces, SPACES_256);
+        last_char_nr = token->char_nr;
+        last_len = token->substr.len;
+
+        if (darken) {
+            if (is_token_op(token->tok)) {
+                printf(GRUVBOX_DARK_RED);
+            } else if (is_token_register(token->tok)) {
+                printf(GRUVBOX_DARK_YELLOW);
+            } else if (is_token_addr(token->tok)) {
+                printf(GRUVBOX_DARK_ORANGE);
+            } else if (is_token_immediate(token->tok)) {
+                printf(GRUVBOX_DARK_MAGENTA);
+            } else if (is_token_label(token->tok)) {
+                printf(GRUVBOX_DARK_GREEN);
+            } else if (is_token_comment(token->tok)) {
+                printf(GRUVBOX_DARK_GREY);
+            } else {
+                printf(RESET);
+            }
+        } else {
+            if (is_token_op(token->tok)) {
+                printf(GRUVBOX_RED);
+            } else if (is_token_register(token->tok)) {
+                printf(GRUVBOX_YELLOW);
+            } else if (is_token_addr(token->tok)) {
+                printf(GRUVBOX_ORANGE);
+            } else if (is_token_immediate(token->tok)) {
+                printf(GRUVBOX_MAGENTA);
+            } else if (is_token_label(token->tok)) {
+                printf(GRUVBOX_GREEN);
+            } else if (is_token_comment(token->tok)) {
+                printf(GRUVBOX_GREY);
+            } else {
+                printf(RESET);
+            }
+        }
+
+        printf("%.*s" RESET, (int)token->substr.len, token->substr.str);
+    }
+}
+
+static void printNumberedHighlightedLine(Assembler* assembler, bool darken) {
+    printf(GRUVBOX_BLUE "%4lu |  " RESET, assembler->line_nr);
+    printHighlightedLine(assembler, darken);
+    printf(RESET "\n");
+}
+
+#define STRINGIFY_EXPR(expr) #expr
+
+static TokenLine* findTokenLineWithLineNr(vec_iter_t token_line_iter, size_t line_nr) {
+    TokenLine* line;
+    
+    while((line = iter_next(&token_line_iter))) {
+        if (line->line_nr == line_nr) {
+            return line;
+        }
+    }
+    return NULL;
+}
+
+static void printNumberedHighlightedLines(Assembler* assembler, size_t n_back) {
+    size_t old_line_nr = assembler->line_nr;
+    slice_t old_line = assembler->line;
+    vec_iter_t token_line_iter = iter_from_vec(&assembler->token_lines);
+    TokenLine* line;
+    
+    for (size_t i = assembler->line_nr - (n_back - 1); i <= old_line_nr; ++i) {
+        void* old_token_ptr = token_line_iter.ptr;
+        
+        if((line = findTokenLineWithLineNr(token_line_iter, i))) {
+            assembler->line_nr = line->line_nr;
+            assembler->line = line->substr;
+            bool darken = old_line_nr == line->line_nr ? false : true;
+            printNumberedHighlightedLine(assembler, darken);
+        } else {
+            assembler->line_nr = i;
+            assembler->line = (slice_t){.len = 0, .str = ""};
+            printNumberedHighlightedLine(assembler, false);
+        }
+        
+        // optimalization: since we only look forward, only start looking from the last found idx
+        // we might skip over a following index so we jump ahead to the last one used
+        token_line_iter.ptr = old_token_ptr;
+    }
+    
+    assembler->line_nr = old_line_nr;
+    assembler->line = old_line;
+}
+
 void printError(Token* tok, ParserError error, Assembler* assembler) {
-    printf("\e[1;31mERROR\e[1;37m: ");
+    printf(GRUVBOX_RED BOLD "ERROR" RESET BOLD ": ");
 
     printErrorMsg(error, tok);
 
-    printf("\n    \e[0;34m-->\e[0m %.*s:%lu:%lu\n", (int)assembler->path.len, assembler->path.str,
-           assembler->line_nr, tok->char_nr);
-    printf("\e[0;34m     |\n");
-    printf("%4lu |  \e[0m%.*s\n", assembler->line_nr, (int)assembler->line.len,
-           assembler->line.str);
+    printf("\n    " GRUVBOX_BLUE "-->" RESET " %.*s:%lu:%lu\n", (int)assembler->path.len, assembler->path.str,           assembler->line_nr, tok->char_nr);
+    printf(GRUVBOX_BLUE "     |\n");
+    printNumberedHighlightedLines(assembler, 3);
 
     alignErrorHelpMsg(tok->char_nr, tok->substr.len);
     printErrorHelpMsg(error);
 
-    printf("\n\e[0;34m     |\n\n");
-    printf("\e[0m");
+    printf(GRUVBOX_BLUE "\n     |\n\n" RESET);
 }
 
 void printWarning(Token* tok, ParserWarning warning, Assembler* assembler) {
-    printf("\e[1;33mWARNING\e[1;37m: ");
+    printf(GRUVBOX_YELLOW BOLD "WARNING" RESET BOLD ": ");
 
     printWarningMsg(warning, tok);
 
-    printf("\n    \e[0;34m-->\e[0m %.*s:%lu:%lu\n", (int)assembler->path.len, assembler->path.str,
-           assembler->line_nr, tok->char_nr);
-    printf("\e[0;34m     |\n");
-    printf("%4lu |  \e[0m%.*s\n", assembler->line_nr, (int)assembler->line.len,
-           assembler->line.str);
+    printf("\n    " GRUVBOX_BLUE "-->" RESET " %.*s:%lu:%lu\n", (int)assembler->path.len, assembler->path.str,           assembler->line_nr, tok->char_nr);
+    printf(GRUVBOX_BLUE "     |\n");
+    printNumberedHighlightedLines(assembler, 3);
 
     alignWarningHelpMsg(tok->char_nr, tok->substr.len);
     printWarningHelpMsg(warning, tok);
 
-    printf("\n\e[0;34m     |\n\n");
-    printf("\e[0m");
+    printf("\n" GRUVBOX_BLUE "     |\n\n" RESET);
 }

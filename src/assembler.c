@@ -79,6 +79,7 @@ static void initAssembler(Assembler* assembler, slice_t filename) {
     assembler->path = filename;
     assembler->line_nr = 0;
     assembler->line = (slice_t){.str = NULL, .len = 0};
+    assembler->token_lines = new_vec(10, sizeof(TokenLine));
     assembler->label_ref_list = new_vec(10, sizeof(LabelRef));
     assembler->label_def_map = new_map();
     assembler->compiled = new_vec(PROGRAM_START + 100, sizeof(uint8_t));
@@ -881,6 +882,8 @@ static void assembleLinePass1(TokenLine* line) {
 /// Compile the assembled tokens into an executable with placeholder zeroes in place of labeled
 /// jumps and memory access. Those will be filled out in pass 2.
 static void assemblePass1(TokenLines lines) {
+    assembler.token_lines = lines.lines;
+    
     vec_iter_t token_lines = iter_from_vec(&lines.lines);
     TokenLine* line;
 
