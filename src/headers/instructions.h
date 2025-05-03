@@ -14,9 +14,7 @@ typedef void (*Instruction)(CPU *cpu);
 #define UPDATE_SF(src) UPDATE_FLAGS(src &SIGN_BIT, sf)
 
 INSTRUCTION(NOOP) { PC++; }
-INSTRUCTION(HALT) {
-    UNUSED(cpu);
-}
+INSTRUCTION(HALT) { UNUSED(cpu); }
 INSTRUCTION(EI) {
     PC++;
     FLAGS = set_if(FLAGS);

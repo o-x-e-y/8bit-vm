@@ -883,7 +883,7 @@ static void assembleLinePass1(TokenLine* line) {
 /// jumps and memory access. Those will be filled out in pass 2.
 static void assemblePass1(TokenLines lines) {
     assembler.token_lines = lines.lines;
-    
+
     vec_iter_t token_lines = iter_from_vec(&lines.lines);
     TokenLine* line;
 

@@ -4,9 +4,9 @@
 #include <stdint.h>
 
 #include "oslice.h"
+#include "ovec.h"
 #include "str_int_map.h"
 #include "tokenizer.h"
-#include "ovec.h"
 
 typedef enum {
     PLUS_EOP = PLUS_T,

@@ -162,9 +162,9 @@ static void printWarningHelpMsg(ParserWarning warning, Token* tok) {
 
 void printHighlightedLine(Assembler* assembler, bool darken) {
     str_iter_t line_iter = iter_from_slice(assembler->line);
-    
+
     printf(RESET);
-    
+
     TokenLine line = tokenizeLine(&line_iter, assembler->line_nr);
 
     vec_iter_t token_iter = iter_from_vec(&line.tokens);
@@ -229,8 +229,8 @@ static void printNumberedHighlightedLine(Assembler* assembler, bool darken) {
 
 static TokenLine* findTokenLineWithLineNr(vec_iter_t token_line_iter, size_t line_nr) {
     TokenLine* line;
-    
-    while((line = iter_next(&token_line_iter))) {
+
+    while ((line = iter_next(&token_line_iter))) {
         if (line->line_nr == line_nr) {
             return line;
         }
@@ -243,11 +243,11 @@ static void printNumberedHighlightedLines(Assembler* assembler, size_t n_back) {
     slice_t old_line = assembler->line;
     vec_iter_t token_line_iter = iter_from_vec(&assembler->token_lines);
     TokenLine* line;
-    
+
     for (size_t i = assembler->line_nr - (n_back - 1); i <= old_line_nr; ++i) {
         void* old_token_ptr = token_line_iter.ptr;
-        
-        if((line = findTokenLineWithLineNr(token_line_iter, i))) {
+
+        if ((line = findTokenLineWithLineNr(token_line_iter, i))) {
             assembler->line_nr = line->line_nr;
             assembler->line = line->substr;
             bool darken = old_line_nr == line->line_nr ? false : true;
@@ -257,12 +257,12 @@ static void printNumberedHighlightedLines(Assembler* assembler, size_t n_back) {
             assembler->line = (slice_t){.len = 0, .str = ""};
             printNumberedHighlightedLine(assembler, false);
         }
-        
+
         // optimalization: since we only look forward, only start looking from the last found idx
         // we might skip over a following index so we jump ahead to the last one used
         token_line_iter.ptr = old_token_ptr;
     }
-    
+
     assembler->line_nr = old_line_nr;
     assembler->line = old_line;
 }
@@ -272,7 +272,8 @@ void printError(Token* tok, ParserError error, Assembler* assembler) {
 
     printErrorMsg(error, tok);
 
-    printf("\n    " GRUVBOX_BLUE "-->" RESET " %.*s:%lu:%lu\n", (int)assembler->path.len, assembler->path.str,           assembler->line_nr, tok->char_nr);
+    printf("\n    " GRUVBOX_BLUE "-->" RESET " %.*s:%lu:%lu\n", (int)assembler->path.len,
+           assembler->path.str, assembler->line_nr, tok->char_nr);
     printf(GRUVBOX_BLUE "     |\n");
     printNumberedHighlightedLines(assembler, 3);
 
@@ -287,7 +288,8 @@ void printWarning(Token* tok, ParserWarning warning, Assembler* assembler) {
 
     printWarningMsg(warning, tok);
 
-    printf("\n    " GRUVBOX_BLUE "-->" RESET " %.*s:%lu:%lu\n", (int)assembler->path.len, assembler->path.str,           assembler->line_nr, tok->char_nr);
+    printf("\n    " GRUVBOX_BLUE "-->" RESET " %.*s:%lu:%lu\n", (int)assembler->path.len,
+           assembler->path.str, assembler->line_nr, tok->char_nr);
     printf(GRUVBOX_BLUE "     |\n");
     printNumberedHighlightedLines(assembler, 3);
 
