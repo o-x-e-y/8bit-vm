@@ -1,11 +1,10 @@
-// #include "headers/assembler.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "headers/assembler.h"
 #include "headers/cpu.h"
 #include "headers/debug.h"
+#include "headers/screen.h"
 #include "headers/util.h"
 
 #define USAGE "USAGE: build/vm <filename>.casm\n"
@@ -16,6 +15,8 @@ int main(int argc, char** argv) {
     } else if (argc == 2) {
         CPU cpu;
         initCpu(&cpu);
+
+        initScreen(&cpu);
 
         const char* filename = argv[1];
         const string_t programStr = read_file_to_str(filename);

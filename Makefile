@@ -5,16 +5,19 @@ obj-path := $(build-path)/obj
 test-obj-path := $(build-path)/test-obj
 release-obj-path := $(build-path)/release-obj
 
-exec-path := $(build-path)/$(executable)
+release-exec-path := $(build-path)/$(executable)
+exec-path := $(build-path)/debug-$(executable)
 test-exec-path := $(build-path)/test-$(executable)
-release-exec-path := $(build-path)/release-$(executable)
 
 src-folder := ./src
 test-folder := ./tests
 headers := ./src/headers
 
-debug-flags := -g -O0 -Wall -Wextra -Wpedantic -Wno-cpp -lm
-release-flags := -O3 -Wno-cpp -lm
+SDL_CFLAGS ?= $(shell pkg-config --cflags sdl3)
+SDL_LIBS ?= $(shell pkg-config --libs sdl3)
+
+release-flags := -O3 -Wno-cpp -lm $(SDL_CFLAGS) $(SDL_LIBS)
+debug-flags := -g -O0 -Wall -Wextra -Wpedantic -Wno-cpp -lm $(SDL_CFLAGS) $(SDL_LIBS)
 valgrind-flags := --leak-check=yes --track-origins=yes -s --leak-check=full --show-leak-kinds=all
 
 src-files := $(wildcard $(src-folder)/*.c)
@@ -29,6 +32,10 @@ release-objs := $(patsubst $(src-folder)/%.c, $(release-obj-path)/%.o, $(src-fil
 
 $(shell mkdir -p $(obj-path) $(test-obj-path) $(release-obj-path))
 
+# create objs with release flags
+$(release-obj-path)/%.o: $(src-folder)/%.c
+	cc $(release-flags) -I$(headers) -c $< -o $@
+
 # create objs with debug flags
 $(obj-path)/%.o: $(src-folder)/%.c
 	cc $(debug-flags) -I$(headers) -c $< -o $@
@@ -36,10 +43,10 @@ $(obj-path)/%.o: $(src-folder)/%.c
 # create test objs
 $(test-obj-path)/%.o: $(test-folder)/%.c
 	cc $(debug-flags) -I$(headers) -I$(test-folder) -c $< -o $@
-
-# create objs with release flags
-$(release-obj-path)/%.o: $(src-folder)/%.c
-	cc $(release-flags) -I$(headers) -c $< -o $@
+	
+# build release executable
+$(release-exec-path): $(release-objs)
+	cc $(release-flags) $^ -o $@
 
 # build debug executable
 $(exec-path): $(src-objs)
@@ -49,13 +56,9 @@ $(exec-path): $(src-objs)
 $(test-exec-path): $(test-objs) $(src-objs-no-main)
 	cc $(debug-flags) $^ -o $@
 
-# build release executable
-$(release-exec-path): $(release-objs)
-	cc $(release-flags) $^ -o $@
-
 .PHONY: build-release
 build-release: $(release-exec-path)
-	
+
 .PHONY: build-all
 build-all: $(exec-path) $(release-exec-path) $(test-exec-path)
 
@@ -88,11 +91,11 @@ fmt:
 
 #aliases
 
-.PHONY: b
-b: build
-
 .PHONY: br
 br: build-release
+	
+.PHONY: b
+b: build
 	
 .PHONY: ba
 ba: build-all

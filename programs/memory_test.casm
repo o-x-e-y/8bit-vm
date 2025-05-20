@@ -1,17 +1,22 @@
 ET
 
-LOAD 4
-STORE R0
+; LOAD 4
+; STORE R0
+; 
+; LOAD label[HL]
+; 
+; loop:
+;     INC HL
+;     ADD (HL) ; HL already contains the label offset, making this more efficient
+;     DEC R0
+;     JNZ .loop
+;     
+; HALT 0
+; 
+; label:
+;     1 2 3 4 5 1234
 
-LOAD label[HL]
-
-loop:
-    INC HL
-    ADD (HL) ; HL already contains the label offset, making this more efficient
-    DEC R0
-    JNZ .loop
-    
-HALT 0
+LOAD label[0]
 
 label:
-    1 2 3 4 5 1234
+    123

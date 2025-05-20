@@ -1,0 +1,121 @@
+PUSH 0
+
+main_loop:
+    POP ACC
+    CMP 255
+    JNZ .dont_reset
+    
+    LOAD 0
+    
+    dont_reset:
+    PUSH ACC
+    
+    LOAD 191
+    STORE R0 ; y
+    
+    outer:
+        LOAD 127
+        STORE R1 ; x
+        
+        inner:
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+            NOOP
+
+            LOAD 0
+            STORE H
+            POP ACC
+            PUSH ACC
+            ADD R0
+            STORE L
+            DIVW 12 ; color value now in L
+            LOAD L
+            SHL 4
+            OR L
+            PUSH ACC
+        
+            LOAD 0
+            STORE H
+            LOAD R0
+            STORE L
+            
+            MULW 128
+            ADDW R1
+            ADDW 0x9fff ; add memory region offset
+                        ; HL now contains i
+            
+            POP ACC
+            
+            STORE (HL)
+            
+            DEC R1
+            JNC .inner
+        
+        DEC R0
+        JNC .outer
+        
+    POP ACC
+    INC ACC
+    PUSH ACC
+    JMP .main_loop

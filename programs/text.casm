@@ -1,0 +1,419 @@
+LOAD 5
+STORE R0 ; x
+LOAD 10
+STORE R1 ; y
+LOAD text_a[HL]
+CALL .print_letter
+
+LOAD 8
+STORE R0
+LOAD 10
+STORE R1
+LOAD 0
+STORE H
+STORE L
+LOAD text_b[HL]
+CALL .print_letter
+
+LOAD 11
+STORE R0
+LOAD 10
+STORE R1
+LOAD 0
+STORE H
+STORE L
+LOAD text_c[HL]
+CALL .print_letter
+
+LOAD 14
+STORE R0
+LOAD 10
+STORE R1
+LOAD 0
+STORE H
+STORE L
+LOAD text_d[HL]
+CALL .print_letter
+
+LOAD 5
+STORE R0
+LOAD 16
+STORE R1
+LOAD 0
+STORE H
+STORE L
+LOAD text_o[HL]
+CALL .print_letter
+
+LOAD 8
+STORE R0
+LOAD 16
+STORE R1
+LOAD 0
+STORE H
+STORE L
+LOAD text_x[HL]
+CALL .print_letter
+
+LOAD 11
+STORE R0
+LOAD 16
+STORE R1
+LOAD 0
+STORE H
+STORE L
+LOAD text_e[HL]
+CALL .print_letter
+
+LOAD 14
+STORE R0
+LOAD 16
+STORE R1
+LOAD 0
+STORE H
+STORE L
+LOAD text_y[HL]
+CALL .print_letter
+
+ET
+
+LOAD 0
+
+HALT
+
+; print 6x5 letter, memory location in HL, x in R0, y in R1
+print_letter:
+    LOAD (HL) ; first sprite byte
+    PUSH H
+    PUSH L
+    PUSH ACC
+    LOAD R1 ; y
+    STORE L
+    LOAD 0
+    STORE H
+    MULW 128
+    LOAD R0 ; x
+    ADDW ACC
+    ADDW 0x9fff ; video addr now in HL
+    POP ACC
+    STORE (HL)
+    POP L
+    POP H
+    INC HL
+    
+    INC R0
+
+    LOAD (HL) ; first sprite byte
+    PUSH H
+    PUSH L
+    PUSH ACC
+    LOAD R1 ; y
+    STORE L
+    LOAD 0
+    STORE H
+    MULW 128
+    LOAD R0 ; x
+    ADDW ACC
+    ADDW 0x9fff ; video addr now in HL
+    POP ACC
+    STORE (HL)
+    POP L
+    POP H
+    INC HL
+    
+    INC R0
+
+    LOAD (HL) ; first sprite byte
+    PUSH H
+    PUSH L
+    PUSH ACC
+    LOAD R1 ; y
+    STORE L
+    LOAD 0
+    STORE H
+    MULW 128
+    LOAD R0 ; x
+    ADDW ACC
+    ADDW 0x9fff ; video addr now in HL
+    POP ACC
+    STORE (HL)
+    POP L
+    POP H
+    INC HL
+    
+    DEC R0
+    DEC R0
+    INC R1
+
+    LOAD (HL) ; first sprite byte
+    PUSH H
+    PUSH L
+    PUSH ACC
+    LOAD R1 ; y
+    STORE L
+    LOAD 0
+    STORE H
+    MULW 128
+    LOAD R0 ; x
+    ADDW ACC
+    ADDW 0x9fff ; video addr now in HL
+    POP ACC
+    STORE (HL)
+    POP L
+    POP H
+    INC HL
+    
+    INC R0
+
+    LOAD (HL) ; first sprite byte
+    PUSH H
+    PUSH L
+    PUSH ACC
+    LOAD R1 ; y
+    STORE L
+    LOAD 0
+    STORE H
+    MULW 128
+    LOAD R0 ; x
+    ADDW ACC
+    ADDW 0x9fff ; video addr now in HL
+    POP ACC
+    STORE (HL)
+    POP L
+    POP H
+    INC HL
+    
+    INC R0
+
+    LOAD (HL) ; first sprite byte
+    PUSH H
+    PUSH L
+    PUSH ACC
+    LOAD R1 ; y
+    STORE L
+    LOAD 0
+    STORE H
+    MULW 128
+    LOAD R0 ; x
+    ADDW ACC
+    ADDW 0x9fff ; video addr now in HL
+    POP ACC
+    STORE (HL)
+    POP L
+    POP H
+    INC HL
+    
+    DEC R0
+    DEC R0
+    INC R1
+
+    LOAD (HL) ; first sprite byte
+    PUSH H
+    PUSH L
+    PUSH ACC
+    LOAD R1 ; y
+    STORE L
+    LOAD 0
+    STORE H
+    MULW 128
+    LOAD R0 ; x
+    ADDW ACC
+    ADDW 0x9fff ; video addr now in HL
+    POP ACC
+    STORE (HL)
+    POP L
+    POP H
+    INC HL
+    
+    INC R0
+
+    LOAD (HL) ; first sprite byte
+    PUSH H
+    PUSH L
+    PUSH ACC
+    LOAD R1 ; y
+    STORE L
+    LOAD 0
+    STORE H
+    MULW 128
+    LOAD R0 ; x
+    ADDW ACC
+    ADDW 0x9fff ; video addr now in HL
+    POP ACC
+    STORE (HL)
+    POP L
+    POP H
+    INC HL
+    
+    INC R0
+
+    LOAD (HL) ; first sprite byte
+    PUSH H
+    PUSH L
+    PUSH ACC
+    LOAD R1 ; y
+    STORE L
+    LOAD 0
+    STORE H
+    MULW 128
+    LOAD R0 ; x
+    ADDW ACC
+    ADDW 0x9fff ; video addr now in HL
+    POP ACC
+    STORE (HL)
+    POP L
+    POP H
+    INC HL
+    
+    DEC R0
+    DEC R0
+    INC R1
+
+    LOAD (HL) ; first sprite byte
+    PUSH H
+    PUSH L
+    PUSH ACC
+    LOAD R1 ; y
+    STORE L
+    LOAD 0
+    STORE H
+    MULW 128
+    LOAD R0 ; x
+    ADDW ACC
+    ADDW 0x9fff ; video addr now in HL
+    POP ACC
+    STORE (HL)
+    POP L
+    POP H
+    INC HL
+    
+    INC R0
+
+    LOAD (HL) ; first sprite byte
+    PUSH H
+    PUSH L
+    PUSH ACC
+    LOAD R1 ; y
+    STORE L
+    LOAD 0
+    STORE H
+    MULW 128
+    LOAD R0 ; x
+    ADDW ACC
+    ADDW 0x9fff ; video addr now in HL
+    POP ACC
+    STORE (HL)
+    POP L
+    POP H
+    INC HL
+    
+    INC R0
+
+    LOAD (HL) ; first sprite byte
+    PUSH H
+    PUSH L
+    PUSH ACC
+    LOAD R1 ; y
+    STORE L
+    LOAD 0
+    STORE H
+    MULW 128
+    LOAD R0 ; x
+    ADDW ACC
+    ADDW 0x9fff ; video addr now in HL
+    POP ACC
+    STORE (HL)
+    POP L
+    POP H
+    INC HL
+    
+    DEC R0
+    DEC R0
+    INC R1
+
+    LOAD (HL) ; first sprite byte
+    PUSH H
+    PUSH L
+    PUSH ACC
+    LOAD R1 ; y
+    STORE L
+    LOAD 0
+    STORE H
+    MULW 128
+    LOAD R0 ; x
+    ADDW ACC
+    ADDW 0x9fff ; video addr now in HL
+    POP ACC
+    STORE (HL)
+    POP L
+    POP H
+    INC HL
+    
+    INC R0
+
+    LOAD (HL) ; first sprite byte
+    PUSH H
+    PUSH L
+    PUSH ACC
+    LOAD R1 ; y
+    STORE L
+    LOAD 0
+    STORE H
+    MULW 128
+    LOAD R0 ; x
+    ADDW ACC
+    ADDW 0x9fff ; video addr now in HL
+    POP ACC
+    STORE (HL)
+    POP L
+    POP H
+    INC HL
+    
+    INC R0
+
+    LOAD (HL) ; first sprite byte
+    PUSH H
+    PUSH L
+    PUSH ACC
+    LOAD R1 ; y
+    STORE L
+    LOAD 0
+    STORE H
+    MULW 128
+    LOAD R0 ; x
+    ADDW ACC
+    ADDW 0x9fff ; video addr now in HL
+    POP ACC
+    STORE (HL)
+    POP L
+    POP H
+    INC HL
+    
+    RET
+
+render_v:
+    0 0
+
+text_a:
+    0x03 0x33 0x00  0x30 0x00 0x30  0x33 0x33 0x30  0x30 0x00 0x30  0x30 0x00 0x30
+    
+text_b:
+    0x33 0x33 0x00  0x30 0x00 0x30  0x33 0x33 0x00  0x30 0x00 0x30  0x33 0x33 0x00
+    
+text_c:
+    0x03 0x33 0x30  0x30 0x00 0x00  0x30 0x00 0x00  0x30 0x00 0x00  0x03 0x33 0x30
+    
+text_d:
+    0x33 0x33 0x00  0x30 0x00 0x30  0x30 0x00 0x30  0x30 0x00 0x30  0x33 0x33 0x00
+    
+text_e:
+    0x33 0x33 0x30  0x30 0x00 0x00  0x33 0x33 0x00  0x30 0x00 0x00  0x33 0x33 0x30
+
+text_o:
+    0x03 0x33 0x00  0x30 0x00 0x30  0x30 0x00 0x30  0x30 0x00 0x30  0x03 0x33 0x00
+
+text_x:
+    0x30 0x00 0x30  0x03 0x03 0x00  0x00 0x30 0x00  0x03 0x03 0x00  0x30 0x00 0x30
+
+text_y:
+    0x30 0x00 0x30  0x03 0x03 0x00  0x00 0x30 0x00  0x00 0x30 0x00  0x00 0x30 0x00

@@ -2,6 +2,14 @@
 
 Open learning personal project. My goal is to create an emulator based on a custom designed CPU spec, then write a playable game for it.
 
+## Requirements
+
+* SDL3
+* pkg-config to handle inclusion of the right headers and libraries when building
+* GCC or any other c compiler exposed as `cc`
+
+If you're using Nix, simply run `nix-shell` to enter an environment where everything is set for you.
+
 ## Usage
 
 To build, simply run `make`. Then, you can do
