@@ -80,8 +80,11 @@ static void printErrorMsg(ParserError err, Token* tok) {
         case INVALID_MEMORY_INDEX_E:
             printf("invalid memory index `%.*s`", (int)tok->substr.len, tok->substr.str);
             break;
-        case BP_REQUIRED_E:
-            printf("stack must be indexed by BP");
+        case INVALID_MEMORY_IDX_INDEX_E:
+            printf("invalid indexed memory index `%.*s`", (int)tok->substr.len, tok->substr.str);
+            break;
+        case INVALID_OPERAND_TYPE_E:
+            printf("invalid operand type");
             break;
     }
 }
@@ -125,10 +128,13 @@ static void printErrorHelpMsg(ParserError err) {
             printf("the stack must be indexed by BP, i.e. {BP + 1}");
             break;
         case INVALID_MEMORY_INDEX_E:
-            printf("Memory index can be indexed by HL, L or an immediate value");
+            printf("memory can be indexed by HL, L or an immediate value");
             break;
-        case BP_REQUIRED_E:
-            printf("only stack operations in the form of {BP + 12} are allowed");
+        case INVALID_MEMORY_IDX_INDEX_E:
+            printf("indexed memory can only be indexed by HL or an immediate value");
+            break;
+        case INVALID_OPERAND_TYPE_E:
+            printf("some operations only take specific operands");
             break;
     }
 }
