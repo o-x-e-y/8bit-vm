@@ -1,79 +1,79 @@
-LOAD 5
-STORE R0 ; x
-LOAD 10
-STORE R1 ; y
+PUSH 10 ; y
+PUSH 5  ; x
 LOAD text_a[HL]
 CALL .print_letter
+POP ACC
+POP ACC
 
-LOAD 8
-STORE R0
-LOAD 10
-STORE R1
+PUSH 10
+PUSH 8
 LOAD 0
 STORE H
 STORE L
 LOAD text_b[HL]
 CALL .print_letter
+POP ACC
+POP ACC
 
-LOAD 11
-STORE R0
-LOAD 10
-STORE R1
+PUSH 10
+PUSH 11
 LOAD 0
 STORE H
 STORE L
 LOAD text_c[HL]
 CALL .print_letter
+POP ACC
+POP ACC
 
-LOAD 14
-STORE R0
-LOAD 10
-STORE R1
+PUSH 10
+PUSH 14
 LOAD 0
 STORE H
 STORE L
 LOAD text_d[HL]
 CALL .print_letter
+POP ACC
+POP ACC
 
-LOAD 5
-STORE R0
-LOAD 16
-STORE R1
+PUSH 16
+PUSH 5
 LOAD 0
 STORE H
 STORE L
 LOAD text_o[HL]
 CALL .print_letter
+POP ACC
+POP ACC
 
-LOAD 8
-STORE R0
-LOAD 16
-STORE R1
+PUSH 16
+PUSH 8
 LOAD 0
 STORE H
 STORE L
 LOAD text_x[HL]
 CALL .print_letter
+POP ACC
+POP ACC
 
-LOAD 11
-STORE R0
-LOAD 16
-STORE R1
+PUSH 16
+PUSH 11
 LOAD 0
 STORE H
 STORE L
 LOAD text_e[HL]
 CALL .print_letter
+POP ACC
+POP ACC
 
-LOAD 14
-STORE R0
-LOAD 16
-STORE R1
+PUSH 16
+PUSH 14
 LOAD 0
 STORE H
 STORE L
 LOAD text_y[HL]
 CALL .print_letter
+POP ACC
+POP ACC
 
 ET
 
@@ -81,38 +81,20 @@ LOAD 0
 
 HALT
 
-; print 6x5 letter, memory location in HL, x in R0, y in R1
+; print 6x5 letter, memory location in HL, x, y on stack
 print_letter:
-    LOAD (HL) ; first sprite byte
-    PUSH H
-    PUSH L
-    PUSH ACC
-    LOAD R1 ; y
-    STORE L
-    LOAD 0
-    STORE H
-    MULW 128
-    LOAD R0 ; x
-    ADDW ACC
-    ADDW 0x9fff ; video addr now in HL
-    POP ACC
-    STORE (HL)
-    POP L
-    POP H
-    INC HL
-    
-    INC R0
+    ENTER 0
 
     LOAD (HL) ; first sprite byte
     PUSH H
     PUSH L
     PUSH ACC
-    LOAD R1 ; y
+    LOAD {BP + 4} ; y
     STORE L
     LOAD 0
     STORE H
     MULW 128
-    LOAD R0 ; x
+    LOAD {BP + 3} ; x
     ADDW ACC
     ADDW 0x9fff ; video addr now in HL
     POP ACC
@@ -121,18 +103,18 @@ print_letter:
     POP H
     INC HL
     
-    INC R0
+    INC {BP + 3}
 
     LOAD (HL) ; first sprite byte
     PUSH H
     PUSH L
     PUSH ACC
-    LOAD R1 ; y
+    LOAD {BP + 4} ; y
     STORE L
     LOAD 0
     STORE H
     MULW 128
-    LOAD R0 ; x
+    LOAD {BP + 3} ; x
     ADDW ACC
     ADDW 0x9fff ; video addr now in HL
     POP ACC
@@ -141,20 +123,18 @@ print_letter:
     POP H
     INC HL
     
-    DEC R0
-    DEC R0
-    INC R1
+    INC {BP + 3}
 
     LOAD (HL) ; first sprite byte
     PUSH H
     PUSH L
     PUSH ACC
-    LOAD R1 ; y
+    LOAD {BP + 4} ; y
     STORE L
     LOAD 0
     STORE H
     MULW 128
-    LOAD R0 ; x
+    LOAD {BP + 3} ; x
     ADDW ACC
     ADDW 0x9fff ; video addr now in HL
     POP ACC
@@ -163,18 +143,20 @@ print_letter:
     POP H
     INC HL
     
-    INC R0
+    DEC {BP + 3}
+    DEC {BP + 3}
+    INC {BP + 4}
 
     LOAD (HL) ; first sprite byte
     PUSH H
     PUSH L
     PUSH ACC
-    LOAD R1 ; y
+    LOAD {BP + 4} ; y
     STORE L
     LOAD 0
     STORE H
     MULW 128
-    LOAD R0 ; x
+    LOAD {BP + 3} ; x
     ADDW ACC
     ADDW 0x9fff ; video addr now in HL
     POP ACC
@@ -183,18 +165,18 @@ print_letter:
     POP H
     INC HL
     
-    INC R0
+    INC {BP + 3}
 
     LOAD (HL) ; first sprite byte
     PUSH H
     PUSH L
     PUSH ACC
-    LOAD R1 ; y
+    LOAD {BP + 4} ; y
     STORE L
     LOAD 0
     STORE H
     MULW 128
-    LOAD R0 ; x
+    LOAD {BP + 3} ; x
     ADDW ACC
     ADDW 0x9fff ; video addr now in HL
     POP ACC
@@ -203,20 +185,18 @@ print_letter:
     POP H
     INC HL
     
-    DEC R0
-    DEC R0
-    INC R1
+    INC {BP + 3}
 
     LOAD (HL) ; first sprite byte
     PUSH H
     PUSH L
     PUSH ACC
-    LOAD R1 ; y
+    LOAD {BP + 4} ; y
     STORE L
     LOAD 0
     STORE H
     MULW 128
-    LOAD R0 ; x
+    LOAD {BP + 3} ; x
     ADDW ACC
     ADDW 0x9fff ; video addr now in HL
     POP ACC
@@ -225,18 +205,20 @@ print_letter:
     POP H
     INC HL
     
-    INC R0
+    DEC {BP + 3}
+    DEC {BP + 3}
+    INC {BP + 4}
 
     LOAD (HL) ; first sprite byte
     PUSH H
     PUSH L
     PUSH ACC
-    LOAD R1 ; y
+    LOAD {BP + 4} ; y
     STORE L
     LOAD 0
     STORE H
     MULW 128
-    LOAD R0 ; x
+    LOAD {BP + 3} ; x
     ADDW ACC
     ADDW 0x9fff ; video addr now in HL
     POP ACC
@@ -245,18 +227,18 @@ print_letter:
     POP H
     INC HL
     
-    INC R0
+    INC {BP + 3}
 
     LOAD (HL) ; first sprite byte
     PUSH H
     PUSH L
     PUSH ACC
-    LOAD R1 ; y
+    LOAD {BP + 4} ; y
     STORE L
     LOAD 0
     STORE H
     MULW 128
-    LOAD R0 ; x
+    LOAD {BP + 3} ; x
     ADDW ACC
     ADDW 0x9fff ; video addr now in HL
     POP ACC
@@ -265,20 +247,18 @@ print_letter:
     POP H
     INC HL
     
-    DEC R0
-    DEC R0
-    INC R1
+    INC {BP + 3}
 
     LOAD (HL) ; first sprite byte
     PUSH H
     PUSH L
     PUSH ACC
-    LOAD R1 ; y
+    LOAD {BP + 4} ; y
     STORE L
     LOAD 0
     STORE H
     MULW 128
-    LOAD R0 ; x
+    LOAD {BP + 3} ; x
     ADDW ACC
     ADDW 0x9fff ; video addr now in HL
     POP ACC
@@ -287,18 +267,20 @@ print_letter:
     POP H
     INC HL
     
-    INC R0
+    DEC {BP + 3}
+    DEC {BP + 3}
+    INC {BP + 4}
 
     LOAD (HL) ; first sprite byte
     PUSH H
     PUSH L
     PUSH ACC
-    LOAD R1 ; y
+    LOAD {BP + 4} ; y
     STORE L
     LOAD 0
     STORE H
     MULW 128
-    LOAD R0 ; x
+    LOAD {BP + 3} ; x
     ADDW ACC
     ADDW 0x9fff ; video addr now in HL
     POP ACC
@@ -307,18 +289,18 @@ print_letter:
     POP H
     INC HL
     
-    INC R0
+    INC {BP + 3}
 
     LOAD (HL) ; first sprite byte
     PUSH H
     PUSH L
     PUSH ACC
-    LOAD R1 ; y
+    LOAD {BP + 4} ; y
     STORE L
     LOAD 0
     STORE H
     MULW 128
-    LOAD R0 ; x
+    LOAD {BP + 3} ; x
     ADDW ACC
     ADDW 0x9fff ; video addr now in HL
     POP ACC
@@ -327,20 +309,18 @@ print_letter:
     POP H
     INC HL
     
-    DEC R0
-    DEC R0
-    INC R1
+    INC {BP + 3}
 
     LOAD (HL) ; first sprite byte
     PUSH H
     PUSH L
     PUSH ACC
-    LOAD R1 ; y
+    LOAD {BP + 4} ; y
     STORE L
     LOAD 0
     STORE H
     MULW 128
-    LOAD R0 ; x
+    LOAD {BP + 3} ; x
     ADDW ACC
     ADDW 0x9fff ; video addr now in HL
     POP ACC
@@ -349,18 +329,20 @@ print_letter:
     POP H
     INC HL
     
-    INC R0
+    DEC {BP + 3}
+    DEC {BP + 3}
+    INC {BP + 4}
 
     LOAD (HL) ; first sprite byte
     PUSH H
     PUSH L
     PUSH ACC
-    LOAD R1 ; y
+    LOAD {BP + 4} ; y
     STORE L
     LOAD 0
     STORE H
     MULW 128
-    LOAD R0 ; x
+    LOAD {BP + 3} ; x
     ADDW ACC
     ADDW 0x9fff ; video addr now in HL
     POP ACC
@@ -369,18 +351,18 @@ print_letter:
     POP H
     INC HL
     
-    INC R0
+    INC {BP + 3}
 
     LOAD (HL) ; first sprite byte
     PUSH H
     PUSH L
     PUSH ACC
-    LOAD R1 ; y
+    LOAD {BP + 4} ; y
     STORE L
     LOAD 0
     STORE H
     MULW 128
-    LOAD R0 ; x
+    LOAD {BP + 3} ; x
     ADDW ACC
     ADDW 0x9fff ; video addr now in HL
     POP ACC
@@ -389,10 +371,30 @@ print_letter:
     POP H
     INC HL
     
+    INC {BP + 3}
+
+    LOAD (HL) ; first sprite byte
+    PUSH H
+    PUSH L
+    PUSH ACC
+    LOAD {BP + 4} ; y
+    STORE L
+    LOAD 0
+    STORE H
+    MULW 128
+    LOAD {BP + 3} ; x
+    ADDW ACC
+    ADDW 0x9fff ; video addr now in HL
+    POP ACC
+    STORE (HL)
+    POP L
+    POP H
+    INC HL
+    
+    ; ET
+    
+    LEAVE
     RET
-
-render_v:
-    0 0
 
 text_a:
     0x03 0x33 0x00  0x30 0x00 0x30  0x33 0x33 0x30  0x30 0x00 0x30  0x30 0x00 0x30
