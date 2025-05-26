@@ -57,7 +57,8 @@ LOAD(H, PC += 1, H)
 #define STORE(variation, pc_inc, dest) \
     INSTRUCTION(STORE_##variation) {   \
         pc_inc;                        \
-        dest = ACC;                    \
+        uint8_t val = ACC;             \
+        dest = val;                    \
         UPDATE_ZF(ACC);                \
         UPDATE_SF(ACC);                \
     }
@@ -88,9 +89,9 @@ XCH(R1, PC += 1, R1)
 XCH(L, PC += 1, L)
 XCH(H, PC += 1, H)
 
-#define ADD(variation, src)          \
+#define ADD(variation, pc_inc, src)  \
     INSTRUCTION(ADD_##variation) {   \
-        PC++;                        \
+        pc_inc;                      \
         uint8_t val = src;           \
         ACC += val;                  \
         UPDATE_ZF(ACC);              \
@@ -98,18 +99,18 @@ XCH(H, PC += 1, H)
         UPDATE_FLAGS(ACC < val, cf); \
     }
 
-ADD(I, MEMORY(PC++))
-ADD(ACC, ACC)
-ADD(ML, MEMORY(L))
-ADD(MHL, MEMORY(HL))
-ADD(R0, R0)
-ADD(R1, R1)
-ADD(L, L)
-ADD(H, H)
+ADD(I, PC += 2, MEMORY(PC - 1))
+ADD(ACC, PC += 1, ACC)
+ADD(ML, PC += 1, MEMORY(L))
+ADD(MHL, PC += 1, MEMORY(HL))
+ADD(R0, PC += 1, R0)
+ADD(R1, PC += 1, R1)
+ADD(L, PC += 1, L)
+ADD(H, PC += 1, H)
 
-#define ADC(variation, src)               \
+#define ADC(variation, pc_inc, src)       \
     INSTRUCTION(ADC_##variation) {        \
-        PC++;                             \
+        pc_inc;                           \
         uint8_t val = src + CARRY_FLAG(); \
         ACC += val;                       \
         UPDATE_ZF(ACC);                   \
@@ -117,18 +118,18 @@ ADD(H, H)
         UPDATE_FLAGS(ACC < val, cf);      \
     }
 
-ADC(I, MEMORY(PC++))
-ADC(ACC, ACC)
-ADC(ML, MEMORY(L))
-ADC(MHL, MEMORY(HL))
-ADC(R0, R0)
-ADC(R1, R1)
-ADC(L, L)
-ADC(H, H)
+ADC(I, PC += 2, MEMORY(PC - 1))
+ADC(ACC, PC += 1, ACC)
+ADC(ML, PC += 1, MEMORY(L))
+ADC(MHL, PC += 1, MEMORY(HL))
+ADC(R0, PC += 1, R0)
+ADC(R1, PC += 1, R1)
+ADC(L, PC += 1, L)
+ADC(H, PC += 1, H)
 
-#define SUB(variation, src)          \
+#define SUB(variation, pc_inc, src)  \
     INSTRUCTION(SUB_##variation) {   \
-        PC++;                        \
+        pc_inc;                      \
         uint8_t val = src;           \
         ACC -= val;                  \
         UPDATE_ZF(ACC);              \
@@ -136,18 +137,18 @@ ADC(H, H)
         UPDATE_FLAGS(ACC > val, cf); \
     }
 
-SUB(I, MEMORY(PC++))
-SUB(ACC, ACC)
-SUB(ML, MEMORY(L))
-SUB(MHL, MEMORY(HL))
-SUB(R0, R0)
-SUB(R1, R1)
-SUB(L, L)
-SUB(H, H)
+SUB(I, PC += 2, MEMORY(PC - 1))
+SUB(ACC, PC += 1, ACC)
+SUB(ML, PC += 1, MEMORY(L))
+SUB(MHL, PC += 1, MEMORY(HL))
+SUB(R0, PC += 1, R0)
+SUB(R1, PC += 1, R1)
+SUB(L, PC += 1, L)
+SUB(H, PC += 1, H)
 
-#define SBC(variation, src)                     \
+#define SBC(variation, pc_inc, src)             \
     INSTRUCTION(SBC_##variation) {              \
-        PC++;                                   \
+        pc_inc;                                 \
         uint8_t val = src - (1 - CARRY_FLAG()); \
         ACC -= val;                             \
         UPDATE_ZF(ACC);                         \
@@ -155,31 +156,31 @@ SUB(H, H)
         UPDATE_FLAGS(ACC > val, cf);            \
     }
 
-SBC(I, MEMORY(PC++))
-SBC(ACC, ACC)
-SBC(ML, MEMORY(L))
-SBC(MHL, MEMORY(HL))
-SBC(R0, R0)
-SBC(R1, R1)
-SBC(L, L)
-SBC(H, H)
+SBC(I, PC += 2, MEMORY(PC - 1))
+SBC(ACC, PC += 1, ACC)
+SBC(ML, PC += 1, MEMORY(L))
+SBC(MHL, PC += 1, MEMORY(HL))
+SBC(R0, PC += 1, R0)
+SBC(R1, PC += 1, R1)
+SBC(L, PC += 1, L)
+SBC(H, PC += 1, H)
 
-#define INC(variation, src)         \
+#define INC(variation, pc_inc, src) \
     INSTRUCTION(INC_##variation) {  \
-        PC++;                       \
+        pc_inc;                     \
         src++;                      \
         UPDATE_ZF(src);             \
         UPDATE_SF(src);             \
         UPDATE_FLAGS(src == 0, cf); \
     }
 
-INC(ACC, ACC)
-INC(ML, MEMORY(L))
-INC(MHL, MEMORY(HL))
-INC(R0, R0)
-INC(R1, R1)
-INC(L, L)
-INC(H, H)
+INC(ACC, PC += 1, ACC)
+INC(ML, PC += 1, MEMORY(L))
+INC(MHL, PC += 1, MEMORY(HL))
+INC(R0, PC += 1, R0)
+INC(R1, PC += 1, R1)
+INC(L, PC += 1, L)
+INC(H, PC += 1, H)
 
 INSTRUCTION(INC_HL) {
     PC++;
@@ -191,9 +192,9 @@ INSTRUCTION(INC_HL) {
     UPDATE_FLAGS(inc == 0, cf);
 }
 
-#define DEC(variation, src)                 \
+#define DEC(variation, pc_inc, src)         \
     INSTRUCTION(DEC_##variation) {          \
-        PC++;                               \
+        pc_inc;                             \
         src--;                              \
         UPDATE_ZF(src);                     \
         UPDATE_SF(src);                     \
@@ -210,20 +211,20 @@ INSTRUCTION(DEC_HL) {
     UPDATE_FLAGS(dec == UINT16_MAX, cf);
 }
 
-DEC(ACC, ACC)
-DEC(ML, MEMORY(L))
-DEC(MHL, MEMORY(HL))
-DEC(R0, R0)
-DEC(R1, R1)
-DEC(L, L)
-DEC(H, H)
+DEC(ACC, PC += 1, ACC)
+DEC(ML, PC += 1, MEMORY(L))
+DEC(MHL, PC += 1, MEMORY(HL))
+DEC(R0, PC += 1, R0)
+DEC(R1, PC += 1, R1)
+DEC(L, PC += 1, L)
+DEC(H, PC += 1, H)
 
-#define NEG(variation, src)        \
-    INSTRUCTION(NEG_##variation) { \
-        PC++;                      \
-        src = -src;                \
-        UPDATE_ZF(src);            \
-        UPDATE_SF(src);            \
+#define NEG(variation, pc_inc, src) \
+    INSTRUCTION(NEG_##variation) {  \
+        pc_inc;                     \
+        src = -src;                 \
+        UPDATE_ZF(src);             \
+        UPDATE_SF(src);             \
     }
 
 INSTRUCTION(NEG_HL) {
@@ -235,20 +236,20 @@ INSTRUCTION(NEG_HL) {
     UPDATE_SF(neg);
 }
 
-NEG(ACC, ACC)
-NEG(ML, MEMORY(L))
-NEG(MHL, MEMORY(HL))
-NEG(R0, R0)
-NEG(R1, R1)
-NEG(L, L)
-NEG(H, H)
+NEG(ACC, PC += 1, ACC)
+NEG(ML, PC += 1, MEMORY(L))
+NEG(MHL, PC += 1, MEMORY(HL))
+NEG(R0, PC += 1, R0)
+NEG(R1, PC += 1, R1)
+NEG(L, PC += 1, L)
+NEG(H, PC += 1, H)
 
-#define NOT(variation, src)        \
-    INSTRUCTION(NOT_##variation) { \
-        PC++;                      \
-        src = ~src;                \
-        UPDATE_ZF(src);            \
-        UPDATE_SF(src);            \
+#define NOT(variation, pc_inc, src) \
+    INSTRUCTION(NOT_##variation) {  \
+        pc_inc;                     \
+        src = ~src;                 \
+        UPDATE_ZF(src);             \
+        UPDATE_SF(src);             \
     }
 
 INSTRUCTION(NOT_HL) {
@@ -260,100 +261,100 @@ INSTRUCTION(NOT_HL) {
     UPDATE_SF(neg);
 }
 
-NOT(ACC, ACC)
-NOT(ML, MEMORY(L))
-NOT(MHL, MEMORY(HL))
-NOT(R0, R0)
-NOT(R1, R1)
-NOT(L, L)
-NOT(H, H)
+NOT(ACC, PC += 1, ACC)
+NOT(ML, PC += 1, MEMORY(L))
+NOT(MHL, PC += 1, MEMORY(HL))
+NOT(R0, PC += 1, R0)
+NOT(R1, PC += 1, R1)
+NOT(L, PC += 1, L)
+NOT(H, PC += 1, H)
 
-#define AND(variation, src)        \
-    INSTRUCTION(AND_##variation) { \
-        PC++;                      \
-        ACC &= src;                \
+#define AND(variation, pc_inc, src) \
+    INSTRUCTION(AND_##variation) {  \
+        pc_inc;                     \
+        ACC &= src;                 \
+        UPDATE_ZF(ACC);             \
+        UPDATE_SF(ACC);             \
+    }
+
+AND(I, PC += 2, MEMORY(PC - 1))
+AND(ACC, PC += 1, ACC)
+AND(ML, PC += 1, MEMORY(L))
+AND(MHL, PC += 1, MEMORY(HL))
+AND(R0, PC += 1, R0)
+AND(R1, PC += 1, R1)
+AND(L, PC += 1, L)
+AND(H, PC += 1, H)
+
+#define OR(variation, pc_inc, src) \
+    INSTRUCTION(OR_##variation) {  \
+        pc_inc;                    \
+        ACC |= src;                \
         UPDATE_ZF(ACC);            \
         UPDATE_SF(ACC);            \
     }
 
-AND(I, MEMORY(PC++))
-AND(ACC, ACC)
-AND(ML, MEMORY(L))
-AND(MHL, MEMORY(HL))
-AND(R0, R0)
-AND(R1, R1)
-AND(L, L)
-AND(H, H)
+OR(I, PC += 2, MEMORY(PC - 1))
+OR(ACC, PC += 1, ACC)
+OR(ML, PC += 1, MEMORY(L))
+OR(MHL, PC += 1, MEMORY(HL))
+OR(R0, PC += 1, R0)
+OR(R1, PC += 1, R1)
+OR(L, PC += 1, L)
+OR(H, PC += 1, H)
 
-#define OR(variation, src)        \
-    INSTRUCTION(OR_##variation) { \
-        PC++;                     \
-        ACC |= src;               \
-        UPDATE_ZF(ACC);           \
-        UPDATE_SF(ACC);           \
+#define XOR(variation, pc_inc, src) \
+    INSTRUCTION(XOR_##variation) {  \
+        pc_inc;                     \
+        ACC ^= src;                 \
+        UPDATE_ZF(ACC);             \
+        UPDATE_SF(ACC);             \
     }
 
-OR(I, MEMORY(PC++))
-OR(ACC, ACC)
-OR(ML, MEMORY(L))
-OR(MHL, MEMORY(HL))
-OR(R0, R0)
-OR(R1, R1)
-OR(L, L)
-OR(H, H)
+XOR(I, PC += 2, MEMORY(PC - 1))
+XOR(ACC, PC += 1, ACC)
+XOR(ML, PC += 1, MEMORY(L))
+XOR(MHL, PC += 1, MEMORY(HL))
+XOR(R0, PC += 1, R0)
+XOR(R1, PC += 1, R1)
+XOR(L, PC += 1, L)
+XOR(H, PC += 1, H)
 
-#define XOR(variation, src)        \
-    INSTRUCTION(XOR_##variation) { \
-        PC++;                      \
-        ACC ^= src;                \
-        UPDATE_ZF(ACC);            \
-        UPDATE_SF(ACC);            \
+#define SHL(variation, pc_inc, src) \
+    INSTRUCTION(SHL_##variation) {  \
+        pc_inc;                     \
+        ACC <<= src;                \
+        UPDATE_ZF(ACC);             \
+        UPDATE_SF(ACC);             \
     }
 
-XOR(I, MEMORY(PC++))
-XOR(ACC, ACC)
-XOR(ML, MEMORY(L))
-XOR(MHL, MEMORY(HL))
-XOR(R0, R0)
-XOR(R1, R1)
-XOR(L, L)
-XOR(H, H)
+SHL(I, PC += 2, MEMORY(PC - 1))
+SHL(ML, PC += 1, MEMORY(L))
+SHL(MHL, PC += 1, MEMORY(HL))
+SHL(R0, PC += 1, R0)
+SHL(R1, PC += 1, R1)
+SHL(L, PC += 1, L)
+SHL(H, PC += 1, H)
 
-#define SHL(variation, src)        \
-    INSTRUCTION(SHL_##variation) { \
-        PC++;                      \
-        ACC <<= src;               \
-        UPDATE_ZF(ACC);            \
-        UPDATE_SF(ACC);            \
+#define SHR(variation, pc_inc, src) \
+    INSTRUCTION(SHR_##variation) {  \
+        pc_inc;                     \
+        ACC >>= src;                \
+        UPDATE_ZF(ACC);             \
+        UPDATE_SF(ACC);             \
     }
 
-SHL(I, MEMORY(PC++))
-SHL(ML, MEMORY(L))
-SHL(MHL, MEMORY(HL))
-SHL(R0, R0)
-SHL(R1, R1)
-SHL(L, L)
-SHL(H, H)
+SHR(I, PC += 2, MEMORY(PC - 1))
+SHR(ML, PC += 1, MEMORY(L))
+SHR(MHL, PC += 1, MEMORY(HL))
+SHR(R0, PC += 1, R0)
+SHR(R1, PC += 1, R1)
+SHR(L, PC += 1, L)
+SHR(H, PC += 1, H)
 
-#define SHR(variation, src)        \
-    INSTRUCTION(SHR_##variation) { \
-        PC++;                      \
-        ACC >>= src;               \
-        UPDATE_ZF(ACC);            \
-        UPDATE_SF(ACC);            \
-    }
-
-SHR(I, MEMORY(PC++))
-SHR(ML, MEMORY(L))
-SHR(MHL, MEMORY(HL))
-SHR(R0, R0)
-SHR(R1, R1)
-SHR(L, L)
-SHR(H, H)
-
-#define ROL(variation, src)                                  \
+#define ROL(variation, pc_inc, src)                          \
     INSTRUCTION(ROL_##variation) {                           \
-        PC++;                                                \
+        pc_inc;                                              \
         const uint8_t mask = CHAR_BIT * sizeof(uint8_t) - 1; \
         const uint8_t rot = src;                             \
         ACC = (ACC << rot) | (ACC >> (-rot & mask));         \
@@ -361,17 +362,17 @@ SHR(H, H)
         UPDATE_SF(ACC);                                      \
     }
 
-ROL(I, MEMORY(PC++))
-ROL(ML, MEMORY(L))
-ROL(MHL, MEMORY(HL))
-ROL(R0, R0)
-ROL(R1, R1)
-ROL(L, L)
-ROL(H, H)
+ROL(I, PC += 2, MEMORY(PC - 1))
+ROL(ML, PC += 1, MEMORY(L))
+ROL(MHL, PC += 1, MEMORY(HL))
+ROL(R0, PC += 1, R0)
+ROL(R1, PC += 1, R1)
+ROL(L, PC += 1, L)
+ROL(H, PC += 1, H)
 
-#define ROR(variation, src)                                  \
+#define ROR(variation, pc_inc, src)                          \
     INSTRUCTION(ROR_##variation) {                           \
-        PC++;                                                \
+        pc_inc;                                              \
         const uint8_t mask = CHAR_BIT * sizeof(uint8_t) - 1; \
         const uint8_t rot = src;                             \
         ACC = (ACC >> rot) | (ACC << (-rot & mask));         \
@@ -379,13 +380,13 @@ ROL(H, H)
         UPDATE_SF(ACC);                                      \
     }
 
-ROR(I, MEMORY(PC++))
-ROR(ML, MEMORY(L))
-ROR(MHL, MEMORY(HL))
-ROR(R0, R0)
-ROR(R1, R1)
-ROR(L, L)
-ROR(H, H)
+ROR(I, PC += 2, MEMORY(PC - 1))
+ROR(ML, PC += 1, MEMORY(L))
+ROR(MHL, PC += 1, MEMORY(HL))
+ROR(R0, PC += 1, R0)
+ROR(R1, PC += 1, R1)
+ROR(L, PC += 1, L)
+ROR(H, PC += 1, H)
 
 /* #define SWAP(variation, src)                         \
 //     INSTRUCTION(SWAP_##variation) {                  \
@@ -486,22 +487,22 @@ INSTRUCTION(JEXT) {
     }
 }
 
-#define CMP(variation, src)        \
-    INSTRUCTION(CMP_##variation) { \
-        PC++;                      \
-        uint8_t val = ACC - src;   \
-        UPDATE_ZF(val);            \
-        UPDATE_SF(val);            \
+#define CMP(variation, pc_inc, src) \
+    INSTRUCTION(CMP_##variation) {  \
+        pc_inc;                     \
+        uint8_t val = ACC - src;    \
+        UPDATE_ZF(val);             \
+        UPDATE_SF(val);             \
     }
 
-CMP(I, MEMORY(PC++))
-CMP(ACC, ACC)
-CMP(ML, MEMORY(L))
-CMP(MHL, MEMORY(HL))
-CMP(R0, R0)
-CMP(R1, R1)
-CMP(L, L)
-CMP(H, H)
+CMP(I, PC += 2, MEMORY(PC - 1))
+CMP(ACC, PC += 1, ACC)
+CMP(ML, PC += 1, MEMORY(L))
+CMP(MHL, PC += 1, MEMORY(HL))
+CMP(R0, PC += 1, R0)
+CMP(R1, PC += 1, R1)
+CMP(L, PC += 1, L)
+CMP(H, PC += 1, H)
 
 #define PUSH(variation, src)        \
     INSTRUCTION(PUSH_##variation) { \
@@ -552,19 +553,16 @@ INSTRUCTION(RET) {
     PC = (high << 8) | low;
 }
 INSTRUCTION(ENTER) {
-    PC++;
+    PC += 2;
     BP = SP;
-    SP += MEMORY(PC++);  // space for local variables
     STACK(SP++) = BP;
-    BP = SP;
+    SP += MEMORY(PC - 1);  // space for local variables
 }
 INSTRUCTION(LEAVE) {
     PC++;
-    BP = STACK(--SP);
-    SP = BP;
+    // BP = STACK(--SP);
+    SP = STACK(BP);
 }
-LOAD(BPI, PC += 2, STACK(BP - MEMORY(PC - 1)))
-STORE(BPI, PC += 2, STACK(BP - MEMORY(PC - 1)))
 INSTRUCTION(ADD_L_I) {
     PC += 2;
     L += MEMORY(PC - 1);
@@ -586,41 +584,63 @@ INSTRUCTION(LOAD_HL_I) {
     L = (uint8_t)MEMORY(PC - 1);
 }
 
-#define MIN(variation, src)        \
-    INSTRUCTION(MIN_##variation) { \
-        PC++;                      \
-        if (src < ACC) {           \
-            ACC = src;             \
-        }                          \
-        UPDATE_ZF(ACC);            \
-        UPDATE_SF(ACC);            \
+#define MIN(variation, pc_inc, src) \
+    INSTRUCTION(MIN_##variation) {  \
+        pc_inc;                     \
+        if (src < ACC) {            \
+            ACC = src;              \
+        }                           \
+        UPDATE_ZF(ACC);             \
+        UPDATE_SF(ACC);             \
     }
 
-MIN(I, MEMORY(PC++))
-MIN(ML, MEMORY(L))
-MIN(MHL, MEMORY(HL))
-MIN(R0, R0)
-MIN(R1, R1)
-MIN(L, L)
-MIN(H, H)
+MIN(I, PC += 2, MEMORY(PC - 2))
+MIN(ML, PC += 1, MEMORY(L))
+MIN(MHL, PC += 1, MEMORY(HL))
+MIN(R0, PC += 1, R0)
+MIN(R1, PC += 1, R1)
+MIN(L, PC += 1, L)
+MIN(H, PC += 1, H)
 
-#define MAX(variation, src)        \
-    INSTRUCTION(MAX_##variation) { \
-        PC++;                      \
-        if (src > ACC) {           \
-            ACC = src;             \
-        }                          \
-        UPDATE_ZF(ACC);            \
-        UPDATE_SF(ACC);            \
+#define MAX(variation, pc_inc, src) \
+    INSTRUCTION(MAX_##variation) {  \
+        pc_inc;                     \
+        if (src > ACC) {            \
+            ACC = src;              \
+        }                           \
+        UPDATE_ZF(ACC);             \
+        UPDATE_SF(ACC);             \
     }
 
-MAX(I, MEMORY(PC++))
-MAX(ML, MEMORY(L))
-MAX(MHL, MEMORY(HL))
-MAX(R0, R0)
-MAX(R1, R1)
-MAX(L, L)
-MAX(H, H)
+MAX(I, PC += 2, MEMORY(PC - 1))
+MAX(ML, PC += 1, MEMORY(L))
+MAX(MHL, PC += 1, MEMORY(HL))
+MAX(R0, PC += 1, R0)
+MAX(R1, PC += 1, R1)
+MAX(L, PC += 1, L)
+MAX(H, PC += 1, H)
+
+LOAD(BPI, PC += 2, STACK((uint8_t)(BP - MEMORY(PC - 1))))
+STORE(BPI, PC += 2, STACK((uint8_t)(BP - MEMORY(PC - 1))))
+MIN(BPI, PC += 2, STACK((uint8_t)(BP - MEMORY(PC - 1))))
+MAX(BPI, PC += 2, STACK((uint8_t)(BP - MEMORY(PC - 1))))
+CMP(BPI, PC += 2, STACK((uint8_t)(BP - MEMORY(PC - 1))))
+XCH(BPI, PC += 2, STACK((uint8_t)(BP - MEMORY(PC - 1))))
+ADD(BPI, PC += 2, STACK((uint8_t)(BP - MEMORY(PC - 1))))
+ADC(BPI, PC += 2, STACK((uint8_t)(BP - MEMORY(PC - 1))))
+SUB(BPI, PC += 2, STACK((uint8_t)(BP - MEMORY(PC - 1))))
+SBC(BPI, PC += 2, STACK((uint8_t)(BP - MEMORY(PC - 1))))
+INC(BPI, PC += 2, STACK((uint8_t)(BP - MEMORY(PC - 1))))
+DEC(BPI, PC += 2, STACK((uint8_t)(BP - MEMORY(PC - 1))))
+NEG(BPI, PC += 2, STACK((uint8_t)(BP - MEMORY(PC - 1))))
+NOT(BPI, PC += 2, STACK((uint8_t)(BP - MEMORY(PC - 1))))
+AND(BPI, PC += 2, STACK((uint8_t)(BP - MEMORY(PC - 1))))
+OR(BPI, PC += 2, STACK((uint8_t)(BP - MEMORY(PC - 1))))
+XOR(BPI, PC += 2, STACK((uint8_t)(BP - MEMORY(PC - 1))))
+SHL(BPI, PC += 2, STACK((uint8_t)(BP - MEMORY(PC - 1))))
+SHR(BPI, PC += 2, STACK((uint8_t)(BP - MEMORY(PC - 1))))
+ROL(BPI, PC += 2, STACK((uint8_t)(BP - MEMORY(PC - 1))))
+ROR(BPI, PC += 2, STACK((uint8_t)(BP - MEMORY(PC - 1))))
 
 #define unused NOOP
 
@@ -643,8 +663,8 @@ static const Instruction OP_TABLE[256] = {
     AND_I,      AND_ACC,    AND_ML,     AND_MHL,    AND_R0,     AND_R1,     AND_L,      AND_H,
     OR_I,       OR_ACC,     OR_ML,      OR_MHL,     OR_R0,      OR_R1,      OR_L,       OR_H, 
     XOR_I,      XOR_ACC,    XOR_ML,     XOR_MHL,    XOR_R0,     XOR_R1,     XOR_L,      XOR_H, 
-    SHL_I,      unused,     SHL_ML,     SHL_MHL,    SHL_R0,     SHL_R1,     SHL_L,      SHL_H,
-    SHR_I,      unused,     SHR_ML,     SHR_MHL,    SHR_R0,     SHR_R1,     SHR_L,      SHR_H,
+    SHL_I,      MIN_BPI,     SHL_ML,     SHL_MHL,    SHL_R0,     SHL_R1,     SHL_L,      SHL_H,
+    SHR_I,      MAX_BPI,     SHR_ML,     SHR_MHL,    SHR_R0,     SHR_R1,     SHR_L,      SHR_H,
     ROL_I,      unused,     ROL_ML,     ROL_MHL,    ROL_R0,     ROL_R1,     ROL_L,      ROL_H,
     ROR_I,      unused,     ROR_ML,     ROR_MHL,    ROR_R0,     ROR_R1,     ROR_L,      ROR_H,
     ADDW_I,     ADDW_ACC,   ADDW_R0,    ADDW_R1,    SUBW_I,     SUBW_ACC,   SUBW_R0,    SUBW_R1,
@@ -655,9 +675,9 @@ static const Instruction OP_TABLE[256] = {
     POP_IM,     POP_ACC,    POP_R0,     POP_R1,     POP_L,      POP_H,      POP_BP,     POP_FLAGS,
     CALL,       RET,        ENTER,      LEAVE,      LOAD_BPI,   STORE_BPI,  ADD_L_I,    ADD_HL_I,
     MIN_I,      unused,     MIN_ML,     MIN_MHL,    MIN_R0,     MIN_R1,     MIN_L,      MIN_H, 
-    MAX_I,      unused,     MAX_ML,     MAX_MHL,    MAX_R0,     MAX_R1,     MAX_L,      MAX_H, 
-    unused,     unused,     unused,     unused,     unused,     unused,     unused,     unused, 
-    unused,     unused,     unused,     unused,     unused,     unused,     unused,     unused, 
+    MAX_I,      CMP_BPI,    MAX_ML,     MAX_MHL,    MAX_R0,     MAX_R1,     MAX_L,      MAX_H, 
+    XCH_BPI,    ADD_BPI,    ADC_BPI,    SUB_BPI,    SBC_BPI,    INC_BPI,    DEC_BPI,    NEG_BPI,
+    NOT_BPI,    AND_BPI,    OR_BPI,     XOR_BPI,    SHL_BPI,    SHR_BPI,    ROL_BPI,    ROR_BPI, 
     unused,     unused,     unused,     unused,     unused,     unused,     unused,     unused, 
     unused,     unused,     unused,     unused,     unused,     unused,     unused,     unused,
 };
@@ -784,7 +804,7 @@ typedef enum Opcode {
     OP_XOR_L        = 118,
     OP_XOR_H        = 119,
     OP_SHL_I        = 120,
-    // OP_unused    = 121,
+    OP_MIN_BPI      = 121,
     OP_SHL_ML       = 122,
     OP_SHL_MHL      = 123,
     OP_SHL_R0       = 124,
@@ -792,7 +812,7 @@ typedef enum Opcode {
     OP_SHL_L        = 126,
     OP_SHL_H        = 127,
     OP_SHR_I        = 128,
-    // OP_unused    = 129,
+    OP_MAX_BPI      = 129,
     OP_SHR_ML       = 130,
     OP_SHR_MHL      = 131,
     OP_SHR_R0       = 132,
@@ -880,29 +900,29 @@ typedef enum Opcode {
     OP_MIN_L        = 214,
     OP_MIN_H        = 215,
     OP_MAX_I        = 216,
-    // OP_unused    = 217,
+    OP_CMP_BPI      = 217,
     OP_MAX_ML       = 218,
     OP_MAX_MHL      = 219,
     OP_MAX_R0       = 220,
     OP_MAX_R1       = 221,
     OP_MAX_L        = 222,
     OP_MAX_H        = 223,
-    // OP_unused    = 224,
-    // OP_unused    = 225,
-    // OP_unused    = 226,
-    // OP_unused    = 227,
-    // OP_unused    = 228,
-    // OP_unused    = 229,
-    // OP_unused    = 230,
-    // OP_unused    = 231,
-    // OP_unused    = 232,
-    // OP_unused    = 233,
-    // OP_unused    = 234,
-    // OP_unused    = 235,
-    // OP_unused    = 236,
-    // OP_unused    = 237,
-    // OP_unused    = 238,
-    // OP_unused    = 239,
+    OP_XCH_BPI      = 224,
+    OP_ADD_BPI      = 225,
+    OP_ADC_BPI      = 226,
+    OP_SUB_BPI      = 227,
+    OP_SBC_BPI      = 228,
+    OP_INC_BPI      = 229,
+    OP_DEC_BPI      = 230,
+    OP_NEG_BPI      = 231,
+    OP_NOT_BPI      = 232,
+    OP_AND_BPI      = 233,
+    OP_OR_BPI       = 234,
+    OP_XOR_BPI      = 235,
+    OP_SHL_BPI      = 236,
+    OP_SHR_BPI      = 237,
+    OP_ROL_BPI      = 238,
+    OP_ROR_BPI      = 239,
     // OP_unused    = 240,
     // OP_unused    = 241,
     // OP_unused    = 242,

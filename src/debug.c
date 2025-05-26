@@ -226,6 +226,25 @@ void printOpcode(Opcode op) {
         case OP_MAX_R1: printf("OP_MAX_R1"); break;
         case OP_MAX_L: printf("OP_MAX_L"); break;
         case OP_MAX_H: printf("OP_MAX_H"); break;
+        case OP_MIN_BPI: printf("OP_MIN_BPI"); break;
+        case OP_MAX_BPI: printf("OP_MAX_BPI"); break;
+        case OP_CMP_BPI: printf("OP_CMP_BPI"); break;
+        case OP_XCH_BPI: printf("OP_XCH_BPI"); break;
+        case OP_ADD_BPI: printf("OP_ADD_BPI"); break;
+        case OP_ADC_BPI: printf("OP_ADC_BPI"); break;
+        case OP_SUB_BPI: printf("OP_SUB_BPI"); break;
+        case OP_SBC_BPI: printf("OP_SBC_BPI"); break;
+        case OP_INC_BPI: printf("OP_INC_BPI"); break;
+        case OP_DEC_BPI: printf("OP_DEC_BPI"); break;
+        case OP_NEG_BPI: printf("OP_NEG_BPI"); break;
+        case OP_NOT_BPI: printf("OP_NOT_BPI"); break;
+        case OP_AND_BPI: printf("OP_AND_BPI"); break;
+        case OP_OR_BPI: printf("OP_OR_BPI"); break;
+        case OP_XOR_BPI: printf("OP_XOR_BPI"); break;
+        case OP_SHL_BPI: printf("OP_SHL_BPI"); break;
+        case OP_SHR_BPI: printf("OP_SHR_BPI"); break;
+        case OP_ROL_BPI: printf("OP_ROL_BPI"); break;
+        case OP_ROR_BPI: printf("OP_ROR_BPI"); break;
     }
 }
 
@@ -518,8 +537,8 @@ void printNextOperation(const uint8_t* memory) {
         case OP_RET: printf("RET"); break;
         case OP_ENTER: printf("ENTER, %u", *(memory + 1)); break;
         case OP_LEAVE: printf("LEAVE"); break;
-        case OP_LOAD_BPI: printf("LOAD_BPI"); break;
-        case OP_STORE_BPI: printf("STORE_BPI"); break;
+        case OP_LOAD_BPI: printf("LOAD_BPI, %u", *(memory + 1)); break;
+        case OP_STORE_BPI: printf("STORE_BPI, %u", *(memory + 1)); break;
         case OP_ADD_L_I: printf("ADD_L_I, %u", *(memory + 1)); break;
         case OP_ADD_HL_I: {
             uint16_t high = (uint16_t)*(memory + 1);
@@ -545,6 +564,26 @@ void printNextOperation(const uint8_t* memory) {
         case OP_MAX_R1: printf("OP_MAX_R1"); break;
         case OP_MAX_L: printf("OP_MAX_L"); break;
         case OP_MAX_H: printf("OP_MAX_H"); break;
+        case OP_MIN_BPI: printf("OP_MIN_BPI, %u", *(memory + 1)); break;
+        case OP_MAX_BPI: printf("OP_MAX_BPI, %u", *(memory + 1)); break;
+        case OP_CMP_BPI: printf("OP_CMP_BPI, %u", *(memory + 1)); break;
+        case OP_XCH_BPI: printf("OP_XCH_BPI, %u", *(memory + 1)); break;
+        case OP_ADD_BPI: printf("OP_ADD_BPI, %u", *(memory + 1)); break;
+        case OP_ADC_BPI: printf("OP_ADC_BPI, %u", *(memory + 1)); break;
+        case OP_SUB_BPI: printf("OP_SUB_BPI, %u", *(memory + 1)); break;
+        case OP_SBC_BPI: printf("OP_SBC_BPI, %u", *(memory + 1)); break;
+        case OP_INC_BPI: printf("OP_INC_BPI, %u", *(memory + 1)); break;
+        case OP_DEC_BPI: printf("OP_DEC_BPI, %u", *(memory + 1)); break;
+        case OP_NEG_BPI: printf("OP_NEG_BPI, %u", *(memory + 1)); break;
+        case OP_NOT_BPI: printf("OP_NOT_BPI, %u", *(memory + 1)); break;
+        case OP_AND_BPI: printf("OP_AND_BPI, %u", *(memory + 1)); break;
+        case OP_OR_BPI: printf("OP_OR_BPI, %u", *(memory + 1)); break;
+        case OP_XOR_BPI: printf("OP_XOR_BPI, %u", *(memory + 1)); break;
+        case OP_SHL_BPI: printf("OP_SHL_BPI, %u", *(memory + 1)); break;
+        case OP_SHR_BPI: printf("OP_SHR_BPI, %u", *(memory + 1)); break;
+        case OP_ROL_BPI: printf("OP_ROL_BPI, %u", *(memory + 1)); break;
+        case OP_ROR_BPI: printf("OP_ROR_BPI, %u", *(memory + 1)); break;
+        default: printf("UNKNOWN, opcode: %u", *memory);
     }
 }
 
@@ -630,16 +669,6 @@ void printToken(void* token) {
 
 // clang-format on
 
-static void flagDisplay(const char* name, uint8_t bit, Flags f) {
-    char c;
-    if (f & bit)
-        c = '1';
-    else
-        c = '0';
-
-    printf("    %s - %c\n", name, c);
-}
-
 void printCpu(CPU* cpu) {
     printf("----- CPU STATUS -----\n");
     printf("PC  - %u\n", PC);
@@ -649,50 +678,61 @@ void printCpu(CPU* cpu) {
     printf("H   - %u\n", H);
     printf("L   - %u\n", L);
 
-    printf("FLAGS\n");
-    flagDisplay("CF", CF_BIT, FLAGS);
-    flagDisplay("AF", AF_BIT, FLAGS);
-    flagDisplay("ZF", ZF_BIT, FLAGS);
-    flagDisplay("SF", SF_BIT, FLAGS);
-    flagDisplay("TF", TF_BIT, FLAGS);
-    flagDisplay("OF", OF_BIT, FLAGS);
-    flagDisplay("IF", IF_BIT, FLAGS);
+    printFlags(cpu);
 
     printf("SP  - %u\n", SP);
     printf("BP  - %u\n", BP);
     printf("HL  - %u\n", HL);
 }
 
+void printFlags(CPU* cpu) {
+    uint8_t bits[7] = {CF_BIT, AF_BIT, ZF_BIT, SF_BIT, TF_BIT, OF_BIT, IF_BIT};
+
+    printf("FLAGS:\n");
+    printf("CF  AF  ZF  SF  TF  OF  IF\n");
+    for (size_t i = 0; i < 7; ++i) {
+        if (FLAGS & bits[i]) {
+            printf(" 1  ");
+        } else {
+            printf("    ");
+        }
+    }
+    printf("\n");
+}
+
 void printStack(CPU* cpu, uint8_t size) {
     size_t sp_string_idx = 1;
+    size_t bp_string_idx = 1;
+
+    size_t offsets[257] = {0};
+    offsets[0] = 1;
 
     printf("[");
     if (size > 0) {
         for (uint8_t i = 0; i < size - 1; ++i) {
             printf("%u, ", STACK(i));
 
-            if (i >= SP) continue;
-
             if (STACK(i) < 10) {
-                sp_string_idx += 3;
+                offsets[i + 1] = offsets[i] + 3;
             } else if (STACK(i) < 100) {
-                sp_string_idx += 4;
+                offsets[i + 1] = offsets[i] + 4;
             } else {
-                sp_string_idx += 5;
+                offsets[i + 1] = offsets[i] + 5;
             }
         }
-        // if (size == 255) {
+
         printf("%u", STACK(size - 1));
-        // } else {
-        //     printf("%u, ...", STACK(size - 1));
-        // }
     }
     printf("]\n");
 
-    for (size_t i = 0; i < sp_string_idx; ++i) {
+    for (size_t i = 0; i < offsets[SP]; ++i) {
         printf(" ");
     }
     printf("^ SP\n");
+    for (size_t i = 0; i < offsets[BP]; ++i) {
+        printf(" ");
+    }
+    printf("^ BP\n");
 }
 
 void printTokenLines(TokenLines* tokenLines) {

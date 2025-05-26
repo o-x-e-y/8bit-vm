@@ -18,11 +18,13 @@ typedef enum {
     IMM_MM,
     HL_MM,
     L_MM,
+    BP_MM,
 } MemMode;
 
-typedef struct MemAddr {
+typedef struct MemExpr {
     MemMode mode;
     uint16_t addr;
+    Token* mode_token;
 } MemExpr;
 
 typedef struct {

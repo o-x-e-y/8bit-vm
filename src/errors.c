@@ -74,9 +74,15 @@ static void printErrorMsg(ParserError err, Token* tok) {
         case MULTIPLE_MEMORY_E:
             printf("encountered more than one of `L` or `HL` in memory expression");
             break;
-            // case EXPECTED_PLUS_MINUS_E:
-            //     printf("expected plus or minus");
-            //     break;
+        case INVALID_STACK_INDEX_E:
+            printf("invalid stack index `%.*s`", (int)tok->substr.len, tok->substr.str);
+            break;
+        case INVALID_MEMORY_INDEX_E:
+            printf("invalid memory index `%.*s`", (int)tok->substr.len, tok->substr.str);
+            break;
+        case BP_REQUIRED_E:
+            printf("stack must be indexed by BP");
+            break;
     }
 }
 
@@ -114,9 +120,16 @@ static void printErrorHelpMsg(ParserError err) {
             break;
         case MULTIPLE_MEMORY_E:
             printf("only one of `L` or `HL` is allowed");
-            // case EXPECTED_PLUS_MINUS_E:
-            //     printf("expected plus or minus");
-            //     break;
+            break;
+        case INVALID_STACK_INDEX_E:
+            printf("the stack must be indexed by BP, i.e. {BP + 1}");
+            break;
+        case INVALID_MEMORY_INDEX_E:
+            printf("Memory index can be indexed by HL, L or an immediate value");
+            break;
+        case BP_REQUIRED_E:
+            printf("only stack operations in the form of {BP + 12} are allowed");
+            break;
     }
 }
 

@@ -16,6 +16,9 @@ typedef enum {
     EXPECTED_EXPR_OP_E,
     EXPECTED_EXPR_E,
     MULTIPLE_MEMORY_E,
+    INVALID_STACK_INDEX_E,
+    INVALID_MEMORY_INDEX_E,
+    BP_REQUIRED_E,
 } ParserError;
 
 typedef enum {

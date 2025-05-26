@@ -121,7 +121,7 @@ void expr_apply(uint16_t* val, ExprOperator op, uint16_t to_apply) {
 
 static MemExpr parse_mem_expr(vec_iter_t token_line, TokenSymbol end) {
     Token* token;
-    MemExpr expr = (MemExpr){.mode = INVALID_MM, .addr = 0};
+    MemExpr expr = (MemExpr){.mode = INVALID_MM, .addr = 0, .mode_token = NULL};
     ExprOperator next_op = PLUS_EOP;
 
     token = iter_peek(&token_line);
@@ -143,18 +143,28 @@ static MemExpr parse_mem_expr(vec_iter_t token_line, TokenSymbol end) {
                 expr_apply(&expr.addr, next_op, parse_immediate(token));
                 break;
             case L_T:
-                if (expr.mode == L_MM || expr.mode == HL_MM) {
+                if (expr.mode == L_MM || expr.mode == HL_MM || expr.mode == BP_MM) {
                     printError(token, MULTIPLE_MEMORY_E, &assembler);
                     return (MemExpr){0};
                 }
                 expr.mode = L_MM;
+                expr.mode_token = token;
                 break;
             case HL_T:
-                if (expr.mode == L_MM || expr.mode == HL_MM) {
+                if (expr.mode == L_MM || expr.mode == HL_MM || expr.mode == BP_MM) {
                     printError(token, MULTIPLE_MEMORY_E, &assembler);
                     return (MemExpr){0};
                 }
                 expr.mode = HL_MM;
+                expr.mode_token = token;
+                break;
+            case BP_T:
+                if (expr.mode == L_MM || expr.mode == HL_MM || expr.mode == BP_MM) {
+                    printError(token, MULTIPLE_MEMORY_E, &assembler);
+                    return (MemExpr){0};
+                }
+                expr.mode = BP_MM;
+                expr.mode_token = token;
                 break;
             default:
                 printError(token, EXPECTED_EXPR_E, &assembler);
@@ -172,6 +182,7 @@ static MemExpr parse_mem_expr(vec_iter_t token_line, TokenSymbol end) {
                 break;
             case R_PAREN_T:
             case R_SQUARE_T:
+            case R_CURLY_T:
                 if (token->tok == end) {
                     if (expr.mode == INVALID_MM) {
                         expr.mode = IMM_MM;
@@ -205,6 +216,8 @@ static MemExpr parse_mem_addr(Token* prev_token, vec_iter_t token_line) {
             return (MemExpr){0};
         case L_PAREN_T:
             return parse_mem_expr(token_line, R_PAREN_T);
+        case L_CURLY_T:
+            return parse_mem_expr(token_line, R_CURLY_T);
         default:
             assert(0 && "unreachable");
     }
@@ -238,38 +251,63 @@ static inline void parse_load_imm(Token* token) {
                 break;                                                                \
             case L_MM:                                                                \
                 assert(0 && "indexing label with just L is currently not supported"); \
+            case BP_MM:                                                               \
+                printError(token, INVALID_MEMORY_INDEX_E, &assembler);                \
+                break;                                                                \
         }                                                                             \
     }; break;
 
-#define PARSE_CASE_L_PAREN(op)                            \
-    case L_PAREN_T: {                                     \
-        MemExpr expr = parse_mem_addr(token, token_line); \
-        switch (expr.mode) {                              \
-            case INVALID_MM:                              \
-                break;                                    \
-            case IMM_MM:                                  \
-                PUSH_OP(OP_##op##_IM);                    \
-                PUSH_IMM16(expr.addr);                    \
-                break;                                    \
-            case HL_MM:                                   \
-                if (expr.addr == 0) {                     \
-                    PUSH_OP(OP_##op##_MHL);               \
-                } else {                                  \
-                    PUSH_OP(OP_ADD_HL_I);                 \
-                    PUSH_IMM16(expr.addr);                \
-                    PUSH_OP(OP_##op##_MHL);               \
-                }                                         \
-                break;                                    \
-            case L_MM:                                    \
-                if (expr.addr == 0) {                     \
-                    PUSH_OP(OP_##op##_ML);                \
-                } else {                                  \
-                    PUSH_OP(OP_ADD_L_I);                  \
-                    PUSH_IMM8(expr.addr);                 \
-                    PUSH_OP(OP_##op##_ML);                \
-                }                                         \
-                break;                                    \
-        }                                                 \
+#define PARSE_CASE_L_PAREN(op)                                                   \
+    case L_PAREN_T: {                                                            \
+        MemExpr expr = parse_mem_addr(token, token_line);                        \
+        switch (expr.mode) {                                                     \
+            case INVALID_MM:                                                     \
+                break;                                                           \
+            case IMM_MM:                                                         \
+                PUSH_OP(OP_##op##_IM);                                           \
+                PUSH_IMM16(expr.addr);                                           \
+                break;                                                           \
+            case HL_MM:                                                          \
+                if (expr.addr == 0) {                                            \
+                    PUSH_OP(OP_##op##_MHL);                                      \
+                } else {                                                         \
+                    PUSH_OP(OP_ADD_HL_I);                                        \
+                    PUSH_IMM16(expr.addr);                                       \
+                    PUSH_OP(OP_##op##_MHL);                                      \
+                }                                                                \
+                break;                                                           \
+            case L_MM:                                                           \
+                if (expr.addr == 0) {                                            \
+                    PUSH_OP(OP_##op##_ML);                                       \
+                } else {                                                         \
+                    PUSH_OP(OP_ADD_L_I);                                         \
+                    PUSH_IMM8(expr.addr);                                        \
+                    PUSH_OP(OP_##op##_ML);                                       \
+                }                                                                \
+                break;                                                           \
+            case BP_MM:                                                          \
+                printError(expr.mode_token, INVALID_MEMORY_INDEX_E, &assembler); \
+                break;                                                           \
+        }                                                                        \
+    }; break;
+
+#define PARSE_CASE_L_CURLY(op)                                                  \
+    case L_CURLY_T: {                                                           \
+        MemExpr expr = parse_mem_addr(token, token_line);                       \
+        switch (expr.mode) {                                                    \
+            case INVALID_MM:                                                    \
+                printError(token, BP_REQUIRED_E, &assembler);                   \
+                break;                                                          \
+            case IMM_MM:                                                        \
+            case HL_MM:                                                         \
+            case L_MM:                                                          \
+                printError(expr.mode_token, INVALID_STACK_INDEX_E, &assembler); \
+                break;                                                          \
+            case BP_MM:                                                         \
+                PUSH_OP(OP_##op##_BPI);                                         \
+                PUSH_IMM8(expr.addr);                                           \
+                break;                                                          \
+        }                                                                       \
     }; break;
 
 static void parse_load(vec_iter_t token_line) {
@@ -283,14 +321,12 @@ static void parse_load(vec_iter_t token_line) {
         PARSE_CASE(LOAD, L);
         PARSE_CASE_LABEL_IDX(LOAD);
         PARSE_CASE_L_PAREN(LOAD);
+        PARSE_CASE_L_CURLY(LOAD);
         case BINARY_T:
         case OCTAL_T:
         case INTEGER_T:
         case HEXADECIMAL_T:
             parse_load_imm(token);
-            break;
-        case L_SQUARE_T:
-            assert(0 && "LOADING FROM STACK IS NOT IMPLEMENTED YET");
             break;
         default:
             printError(token, UNEXPECTED_TOKEN_E, &assembler);
@@ -309,9 +345,7 @@ static inline void parse_store(vec_iter_t token_line) {
         PARSE_CASE(STORE, L);
         PARSE_CASE_LABEL_IDX(STORE);
         PARSE_CASE_L_PAREN(STORE);
-        case L_SQUARE_T:
-            assert(0 && "STORING IN STACK IS NOT IMPLEMENTED YET");
-            break;
+        PARSE_CASE_L_CURLY(STORE);
         default:
             printError(token, UNEXPECTED_TOKEN_E, &assembler);
             break;
@@ -329,6 +363,7 @@ static inline void parse_xch(vec_iter_t token_line) {
         PARSE_CASE(XCH, L);
         PARSE_CASE_LABEL_IDX(XCH);
         PARSE_CASE_L_PAREN(XCH);
+        PARSE_CASE_L_CURLY(XCH);
         case BINARY_T:
         case OCTAL_T:
         case INTEGER_T:
@@ -344,140 +379,137 @@ static inline void parse_xch(vec_iter_t token_line) {
     }
 }
 
-#define PARSE_ALU_CASE_LABEL_IDX(op)                                                  \
-    case LABEL_IDX_T: {                                                               \
-        MemExpr expr = parse_mem_addr(token, token_line);                             \
-        switch (expr.mode) {                                                          \
-            case INVALID_MM:                                                          \
-                assert(0 && "INVALID MEMORY ACCESS WHAT");                            \
-                break;                                                                \
-            case IMM_MM:                                                              \
-                PUSH_OP(OP_LOAD_HL_I);                                                \
-                PUSH_LABEL_IDX(token, expr.addr);                                     \
-                PUSH_OP(OP_##op##_MHL);                                               \
-                break;                                                                \
-            case HL_MM:                                                               \
-                PUSH_OP(OP_ADD_HL_I);                                                 \
-                PUSH_LABEL_IDX(token, expr.addr);                                     \
-                PUSH_OP(OP_##op##_MHL);                                               \
-                break;                                                                \
-            case L_MM:                                                                \
-                assert(0 && "indexing label with just L is currently not supported"); \
-        }                                                                             \
+#define PARSE_ALU_CASE_LABEL_IDX(op)                                             \
+    case LABEL_IDX_T: {                                                          \
+        MemExpr expr = parse_mem_addr(token, token_line);                        \
+        switch (expr.mode) {                                                     \
+            case INVALID_MM:                                                     \
+                assert(0 && "INVALID MEMORY ACCESS WHAT");                       \
+                break;                                                           \
+            case IMM_MM:                                                         \
+                PUSH_OP(OP_LOAD_HL_I);                                           \
+                PUSH_LABEL_IDX(token, expr.addr);                                \
+                PUSH_OP(OP_##op##_MHL);                                          \
+                break;                                                           \
+            case HL_MM:                                                          \
+                PUSH_OP(OP_ADD_HL_I);                                            \
+                PUSH_LABEL_IDX(token, expr.addr);                                \
+                PUSH_OP(OP_##op##_MHL);                                          \
+                break;                                                           \
+            case L_MM:                                                           \
+            case BP_MM:                                                          \
+                printError(expr.mode_token, INVALID_MEMORY_INDEX_E, &assembler); \
+                break;                                                           \
+        }                                                                        \
     }; break;
 
-#define PARSE_ALU_CASE_L_PAREN(op)                        \
-    case L_PAREN_T: {                                     \
-        MemExpr expr = parse_mem_addr(token, token_line); \
-        switch (expr.mode) {                              \
-            case INVALID_MM:                              \
-                break;                                    \
-            case IMM_MM:                                  \
-                PUSH_OP(OP_LOAD_HL_I);                    \
-                PUSH_IMM16(expr.addr);                    \
-                PUSH_OP(OP_##op##_MHL);                   \
-                break;                                    \
-            case HL_MM:                                   \
-                if (expr.addr == 0) {                     \
-                    PUSH_OP(OP_##op##_MHL);               \
-                } else {                                  \
-                    PUSH_OP(OP_ADD_HL_I);                 \
-                    PUSH_IMM16(expr.addr);                \
-                    PUSH_OP(OP_##op##_MHL);               \
-                }                                         \
-                break;                                    \
-            case L_MM:                                    \
-                if (expr.addr == 0) {                     \
-                    PUSH_OP(OP_##op##_ML);                \
-                } else {                                  \
-                    PUSH_OP(OP_ADD_L_I);                  \
-                    PUSH_IMM8(expr.addr);                 \
-                    PUSH_OP(OP_##op##_ML);                \
-                }                                         \
-                break;                                    \
-        }                                                 \
+#define PARSE_ALU_CASE_L_PAREN(op)                                               \
+    case L_PAREN_T: {                                                            \
+        MemExpr expr = parse_mem_addr(token, token_line);                        \
+        switch (expr.mode) {                                                     \
+            case INVALID_MM:                                                     \
+                break;                                                           \
+            case IMM_MM:                                                         \
+                PUSH_OP(OP_LOAD_HL_I);                                           \
+                PUSH_IMM16(expr.addr);                                           \
+                PUSH_OP(OP_##op##_MHL);                                          \
+                break;                                                           \
+            case HL_MM:                                                          \
+                if (expr.addr == 0) {                                            \
+                    PUSH_OP(OP_##op##_MHL);                                      \
+                } else {                                                         \
+                    PUSH_OP(OP_ADD_HL_I);                                        \
+                    PUSH_IMM16(expr.addr);                                       \
+                    PUSH_OP(OP_##op##_MHL);                                      \
+                }                                                                \
+                break;                                                           \
+            case L_MM:                                                           \
+                if (expr.addr == 0) {                                            \
+                    PUSH_OP(OP_##op##_ML);                                       \
+                } else {                                                         \
+                    PUSH_OP(OP_ADD_L_I);                                         \
+                    PUSH_IMM8(expr.addr);                                        \
+                    PUSH_OP(OP_##op##_ML);                                       \
+                }                                                                \
+                break;                                                           \
+            case BP_MM:                                                          \
+                printError(expr.mode_token, INVALID_MEMORY_INDEX_E, &assembler); \
+                break;                                                           \
+        }                                                                        \
     }; break;
 
-#define PARSE_ACC_ALU(op)                                                   \
-    {                                                                       \
-        Token* token = nextToken(&token_line);                              \
-        if (token == NULL) return;                                          \
-                                                                            \
-        switch (token->tok) {                                               \
-            PARSE_CASE(op, ACC);                                            \
-            PARSE_CASE(op, R0);                                             \
-            PARSE_CASE(op, R1);                                             \
-            PARSE_CASE(op, H);                                              \
-            PARSE_CASE(op, L);                                              \
-            PARSE_ALU_CASE_LABEL_IDX(op);                                   \
-            PARSE_ALU_CASE_L_PAREN(op);                                     \
-            case BINARY_T:                                                  \
-            case OCTAL_T:                                                   \
-            case INTEGER_T:                                                 \
-            case HEXADECIMAL_T:                                             \
-                PUSH_OP(OP_##op##_I);                                       \
-                PUSH_IMM8(parse_immediate(token));                          \
-                break;                                                      \
-            case L_SQUARE_T:                                                \
-                assert(0 && "OPERATIONS ON STACK ARE NOT IMPLEMENTED YET"); \
-                break;                                                      \
-            default:                                                        \
-                printError(token, UNEXPECTED_TOKEN_E, &assembler);          \
-                break;                                                      \
-        }                                                                   \
+#define PARSE_ACC_ALU(op)                                          \
+    {                                                              \
+        Token* token = nextToken(&token_line);                     \
+        if (token == NULL) return;                                 \
+                                                                   \
+        switch (token->tok) {                                      \
+            PARSE_CASE(op, ACC);                                   \
+            PARSE_CASE(op, R0);                                    \
+            PARSE_CASE(op, R1);                                    \
+            PARSE_CASE(op, H);                                     \
+            PARSE_CASE(op, L);                                     \
+            PARSE_ALU_CASE_LABEL_IDX(op);                          \
+            PARSE_ALU_CASE_L_PAREN(op);                            \
+            PARSE_CASE_L_CURLY(op);                                \
+            case BINARY_T:                                         \
+            case OCTAL_T:                                          \
+            case INTEGER_T:                                        \
+            case HEXADECIMAL_T:                                    \
+                PUSH_OP(OP_##op##_I);                              \
+                PUSH_IMM8(parse_immediate(token));                 \
+                break;                                             \
+            default:                                               \
+                printError(token, UNEXPECTED_TOKEN_E, &assembler); \
+                break;                                             \
+        }                                                          \
     }
 
-#define PARSE_HL_ALU(op)                                                     \
-    {                                                                        \
-        Token* token = nextToken(&token_line);                               \
-        if (token == NULL) return;                                           \
-                                                                             \
-        switch (token->tok) {                                                \
-            PARSE_CASE(op, ACC);                                             \
-            PARSE_CASE(op, R0);                                              \
-            PARSE_CASE(op, R1);                                              \
-            PARSE_CASE(op, H);                                               \
-            PARSE_CASE(op, L);                                               \
-            PARSE_CASE(op, HL);                                              \
-            case L_PAREN_T:                                                  \
-                assert(0 && "OPERATIONS ON MEMORY ARE NOT IMPLEMENTED YET"); \
-                parse_mem_addr(token, token_line);                           \
-                break;                                                       \
-            case L_SQUARE_T:                                                 \
-                assert(0 && "OPERATIONS ON STACK ARE NOT IMPLEMENTED YET");  \
-                break;                                                       \
-            default:                                                         \
-                printError(token, UNEXPECTED_TOKEN_E, &assembler);           \
-                break;                                                       \
-        }                                                                    \
+#define PARSE_HL_ALU(op)                                           \
+    {                                                              \
+        Token* token = nextToken(&token_line);                     \
+        if (token == NULL) return;                                 \
+                                                                   \
+        switch (token->tok) {                                      \
+            PARSE_CASE(op, ACC);                                   \
+            PARSE_CASE(op, R0);                                    \
+            PARSE_CASE(op, R1);                                    \
+            PARSE_CASE(op, H);                                     \
+            PARSE_CASE(op, L);                                     \
+            PARSE_CASE(op, HL);                                    \
+            PARSE_ALU_CASE_LABEL_IDX(op);                          \
+            PARSE_ALU_CASE_L_PAREN(op);                            \
+            PARSE_CASE_L_CURLY(op);                                \
+            default:                                               \
+                printError(token, UNEXPECTED_TOKEN_E, &assembler); \
+                break;                                             \
+        }                                                          \
     }
 
-#define PARSE_SHIFT_ALU(op)                                                 \
-    {                                                                       \
-        Token* token = nextToken(&token_line);                              \
-        if (token == NULL) return;                                          \
-                                                                            \
-        switch (token->tok) {                                               \
-            PARSE_CASE(op, R0);                                             \
-            PARSE_CASE(op, R1);                                             \
-            PARSE_CASE(op, H);                                              \
-            PARSE_CASE(op, L);                                              \
-            PARSE_ALU_CASE_LABEL_IDX(op);                                   \
-            PARSE_ALU_CASE_L_PAREN(op);                                     \
-            case BINARY_T:                                                  \
-            case OCTAL_T:                                                   \
-            case INTEGER_T:                                                 \
-            case HEXADECIMAL_T:                                             \
-                PUSH_OP(OP_##op##_I);                                       \
-                PUSH_IMM8(parse_immediate(token));                          \
-                break;                                                      \
-            case L_SQUARE_T:                                                \
-                assert(0 && "OPERATIONS ON STACK ARE NOT IMPLEMENTED YET"); \
-                break;                                                      \
-            default:                                                        \
-                printError(token, UNEXPECTED_TOKEN_E, &assembler);          \
-                break;                                                      \
-        }                                                                   \
+#define PARSE_SHIFT_ALU(op)                                        \
+    {                                                              \
+        Token* token = nextToken(&token_line);                     \
+        if (token == NULL) return;                                 \
+                                                                   \
+        switch (token->tok) {                                      \
+            PARSE_CASE(op, R0);                                    \
+            PARSE_CASE(op, R1);                                    \
+            PARSE_CASE(op, H);                                     \
+            PARSE_CASE(op, L);                                     \
+            PARSE_ALU_CASE_LABEL_IDX(op);                          \
+            PARSE_ALU_CASE_L_PAREN(op);                            \
+            PARSE_CASE_L_CURLY(op);                                \
+            case BINARY_T:                                         \
+            case OCTAL_T:                                          \
+            case INTEGER_T:                                        \
+            case HEXADECIMAL_T:                                    \
+                PUSH_OP(OP_##op##_I);                              \
+                PUSH_IMM8(parse_immediate(token));                 \
+                break;                                             \
+            default:                                               \
+                printError(token, UNEXPECTED_TOKEN_E, &assembler); \
+                break;                                             \
+        }                                                          \
     }
 
 #define PARSE_WIDE(op)                                                       \
@@ -671,7 +703,7 @@ static inline void parse_enter(vec_iter_t token_line) {
         case OCTAL_T:
         case INTEGER_T:
         case HEXADECIMAL_T:
-            PUSH_OP(OP_CALL);
+            PUSH_OP(OP_ENTER);
             PUSH_IMM8(parse_immediate(token));
             break;
         default:
