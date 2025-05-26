@@ -701,9 +701,6 @@ void printFlags(CPU* cpu) {
 }
 
 void printStack(CPU* cpu, uint8_t size) {
-    size_t sp_string_idx = 1;
-    size_t bp_string_idx = 1;
-
     size_t offsets[257] = {0};
     offsets[0] = 1;
 
