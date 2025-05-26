@@ -1,0 +1,24 @@
+ET
+
+PUSH 12
+CALL .stackops
+
+HALT
+
+stackops:
+    ENTER 2
+    PUSH 10
+    LOAD 3
+    STORE {BP - 1}
+    LOAD 5
+    STORE {BP - 2}
+    LOAD 0
+    ADD {BP - 2}
+    INC {BP - 1}
+    SUB {BP - 1}
+    ADD {BP + 3} ; should be 12
+    POP R0
+    ADD R0
+    LEAVE
+    RET
+    
