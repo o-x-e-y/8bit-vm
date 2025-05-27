@@ -688,6 +688,27 @@ static inline void parse_call(vec_iter_t token_line) {
     }
 }
 
+static inline void parse_ret(vec_iter_t token_line) {
+    Token* token = iter_next(&token_line);
+    if (token == NULL) {
+        PUSH_OP(OP_RET);
+        return;
+    };
+
+    switch (token->tok) {
+        case BINARY_T:
+        case OCTAL_T:
+        case INTEGER_T:
+        case HEXADECIMAL_T:
+            PUSH_OP(OP_RET_I);
+            PUSH_IMM8(parse_immediate(token));
+            break;
+        default:
+            printError(token, UNEXPECTED_TOKEN_E, &assembler);
+            break;
+    }
+}
+
 static inline void parse_enter(vec_iter_t token_line) {
     Token* token = nextToken(&token_line);
     if (token == NULL) return;
@@ -736,9 +757,6 @@ static void assembleLinePass1(TokenLine* line) {
             break;
         case RESET_T:
             HANDLE_BASIC_OP(RESET);
-            break;
-        case RET_T:
-            HANDLE_BASIC_OP(RET);
             break;
         case LEAVE_T:
             HANDLE_BASIC_OP(LEAVE);
@@ -838,6 +856,9 @@ static void assembleLinePass1(TokenLine* line) {
             break;
         case CALL_T:
             parse_call(token_line);
+            break;
+        case RET_T:
+            parse_ret(token_line);
             break;
         case ENTER_T:
             parse_enter(token_line);

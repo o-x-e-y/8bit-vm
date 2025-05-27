@@ -552,6 +552,13 @@ INSTRUCTION(RET) {
     uint16_t high = (uint16_t)STACK(--SP);
     PC = (high << 8) | low;
 }
+INSTRUCTION(RET_I) {
+    uint8_t to_pop = MEMORY(PC + 1);
+    uint16_t low = (uint16_t)STACK(--SP);
+    uint16_t high = (uint16_t)STACK(--SP);
+    PC = (high << 8) | low;
+    SP -= to_pop;
+}
 INSTRUCTION(ENTER) {
     PC += 2;
     BP = SP;
@@ -674,7 +681,7 @@ static const Instruction OP_TABLE[256] = {
     PUSH_I,     PUSH_ACC,   PUSH_R0,    PUSH_R1,    PUSH_L,     PUSH_H,     PUSH_BP,    PUSH_FLAGS,
     POP_IM,     POP_ACC,    POP_R0,     POP_R1,     POP_L,      POP_H,      POP_BP,     POP_FLAGS,
     CALL,       RET,        ENTER,      LEAVE,      LOAD_BPI,   STORE_BPI,  ADD_L_I,    ADD_HL_I,
-    MIN_I,      unused,     MIN_ML,     MIN_MHL,    MIN_R0,     MIN_R1,     MIN_L,      MIN_H, 
+    MIN_I,      RET_I,      MIN_ML,     MIN_MHL,    MIN_R0,     MIN_R1,     MIN_L,      MIN_H, 
     MAX_I,      CMP_BPI,    MAX_ML,     MAX_MHL,    MAX_R0,     MAX_R1,     MAX_L,      MAX_H, 
     XCH_BPI,    ADD_BPI,    ADC_BPI,    SUB_BPI,    SBC_BPI,    INC_BPI,    DEC_BPI,    NEG_BPI,
     NOT_BPI,    AND_BPI,    OR_BPI,     XOR_BPI,    SHL_BPI,    SHR_BPI,    ROL_BPI,    ROR_BPI, 
@@ -892,7 +899,7 @@ typedef enum Opcode {
     OP_ADD_L_I      = 206,
     OP_ADD_HL_I     = 207,
     OP_MIN_I        = 208,
-    // OP_unused    = 209,
+    OP_RET_I        = 209,
     OP_MIN_ML       = 210,
     OP_MIN_MHL      = 211,
     OP_MIN_R0       = 212,
