@@ -690,7 +690,7 @@ static inline void parse_call(vec_iter_t token_line) {
 
 static inline void parse_ret(vec_iter_t token_line) {
     Token* token = iter_next(&token_line);
-    if (token == NULL) {
+    if (token == NULL || token->tok == COMMENT_T) {
         PUSH_OP(OP_RET);
         return;
     };
