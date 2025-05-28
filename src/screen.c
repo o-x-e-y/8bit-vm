@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "SDL3/SDL_init.h"
 #include "SDL3/SDL_log.h"
@@ -19,6 +20,7 @@
 static SDL_Window* window = NULL;
 static SDL_Renderer* renderer = NULL;
 static SDL_Texture* texture = NULL;
+static uint32_t* rgba_buffer = NULL;
 
 static const uint32_t colors[16] = {
     0x282828FF,  // GRUVBOX_BLACK
@@ -65,6 +67,8 @@ static SDL_AppResult initialize_sdl() {
 
     SDL_SetRenderScale(renderer, PIXEL_SCALE, PIXEL_SCALE);
     SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
+    
+    rgba_buffer = calloc(SCREEN_WIDTH * SCREEN_HEIGHT, sizeof(uint32_t));
 
     return SDL_APP_CONTINUE;
 }
@@ -77,8 +81,6 @@ static void cleanup_sdl() {
 }
 
 static void update_and_render(screen_buffer frame_buffer) {
-    uint32_t rgba_buffer[SCREEN_WIDTH * SCREEN_HEIGHT];
-
     for (size_t i = 0; i < frame_buffer.len; ++i) {
         rgba_buffer[i * 2] = colors[frame_buffer.buffer[i] >> 4];
         rgba_buffer[i * 2 + 1] = colors[frame_buffer.buffer[i] & 0x0F];
