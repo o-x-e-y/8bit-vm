@@ -202,6 +202,9 @@ TokenSymbol tokenizeSymbol(str_iter_t* iter) {
                         case 'C':
                             if (istokdelim(str_iter_peek(iter))) return JNC_T;
                             return unknown(iter);
+                        case 'S':
+                            if (istokdelim(str_iter_peek(iter))) return JNS_T;
+                            return unknown(iter);
                         case 'Z':
                             if (istokdelim(str_iter_peek(iter))) return JNZ_T;
                             return unknown(iter);
@@ -209,6 +212,9 @@ TokenSymbol tokenizeSymbol(str_iter_t* iter) {
                     return unknown(iter);
                 case 'M':
                     if (str_iter_next(iter) == 'P' && istokdelim(str_iter_peek(iter))) return JMP_T;
+                    return unknown(iter);
+                case 'S':
+                    if (istokdelim(str_iter_peek(iter))) return JS_T;
                     return unknown(iter);
                 case 'Z':
                     if (istokdelim(str_iter_peek(iter))) return JZ_T;

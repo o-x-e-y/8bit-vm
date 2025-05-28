@@ -830,6 +830,12 @@ static void assembleLinePass1(TokenLine* line) {
         case JMP_T:
             PARSE_JMP(JMP);
             break;
+        case JS_T:
+            PARSE_JMP(JS);
+            break;
+        case JNS_T:
+            PARSE_JMP(JNS);
+            break;
         case JZ_T:
             PARSE_JMP(JZ);
             break;

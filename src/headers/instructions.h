@@ -435,18 +435,24 @@ OPW(DIVW, /, PC += 1, ACC, ACC)
 OPW(DIVW, /, PC += 1, R0, R0)
 OPW(DIVW, /, PC += 1, R1, R1)
 
-INSTRUCTION(JMP) {
+INSTRUCTION(JMP) { PC = ((uint16_t)MEMORY(PC + 1) << 8) | ((uint16_t)MEMORY(PC + 2)); }
+INSTRUCTION(JS) {
     PC += 3;
-    PC = ((uint16_t)MEMORY(PC - 2) << 8) | ((uint16_t)MEMORY(PC - 1));
+    if (get_sf(FLAGS)) {
+        PC = ((uint16_t)MEMORY(PC - 2) << 8) | ((uint16_t)MEMORY(PC - 1));
+    }
 }
-INSTRUCTION(JIHL) {
+INSTRUCTION(JNS) {
     PC += 3;
-    PC = (((uint16_t)MEMORY(PC - 2) << 8) | ((uint16_t)MEMORY(PC - 1))) + HL;
+    if (!get_sf(FLAGS)) {
+        PC = ((uint16_t)MEMORY(PC - 2) << 8) | ((uint16_t)MEMORY(PC - 1));
+    }
 }
-INSTRUCTION(JHL) { PC = HL; }
 INSTRUCTION(JZ) {
     PC += 3;
-    if (get_zf(FLAGS)) PC = ((uint16_t)MEMORY(PC - 2) << 8) | ((uint16_t)MEMORY(PC - 1));
+    if (get_zf(FLAGS)) {
+        PC = ((uint16_t)MEMORY(PC - 2) << 8) | ((uint16_t)MEMORY(PC - 1));
+    }
 }
 INSTRUCTION(JNZ) {
     PC += 3;
@@ -456,11 +462,15 @@ INSTRUCTION(JNZ) {
 }
 INSTRUCTION(JC) {
     PC += 3;
-    if (get_cf(FLAGS)) PC = ((uint16_t)MEMORY(PC - 2) << 8) | (uint16_t)MEMORY(PC - 1);
+    if (get_cf(FLAGS)) {
+        PC = ((uint16_t)MEMORY(PC - 2) << 8) | (uint16_t)MEMORY(PC - 1);
+    }
 }
 INSTRUCTION(JNC) {
     PC += 3;
-    if (!get_cf(FLAGS)) PC = ((uint16_t)MEMORY(PC - 2) << 8) | ((uint16_t)MEMORY(PC - 1));
+    if (!get_cf(FLAGS)) {
+        PC = ((uint16_t)MEMORY(PC - 2) << 8) | ((uint16_t)MEMORY(PC - 1));
+    }
 }
 INSTRUCTION(JEXT) {
     PC++;
@@ -578,7 +588,7 @@ INSTRUCTION(ADD_HL_I) {
     PC += 3;
     uint16_t val = HL + (((uint16_t)(MEMORY(PC - 2)) << 8) | ((uint16_t)MEMORY(PC - 1)));
     H = (uint8_t)((val >> 8) & 0xFF);
-    L = (uint8_t)MEMORY(PC - 1);
+    L = (uint8_t)(val & 0xFF);
 }
 INSTRUCTION(LOAD_L_I) {
     PC += 2;
@@ -586,8 +596,7 @@ INSTRUCTION(LOAD_L_I) {
 }
 INSTRUCTION(LOAD_HL_I) {
     PC += 3;
-    uint16_t val = ((uint16_t)(MEMORY(PC - 2)) << 8) | ((uint16_t)MEMORY(PC - 1));
-    H = (uint8_t)((val >> 8) & 0xFF);
+    H = (uint8_t)MEMORY(PC - 2);
     L = (uint8_t)MEMORY(PC - 1);
 }
 
@@ -676,7 +685,7 @@ static const Instruction OP_TABLE[256] = {
     ROR_I,      unused,     ROR_ML,     ROR_MHL,    ROR_R0,     ROR_R1,     ROR_L,      ROR_H,
     ADDW_I,     ADDW_ACC,   ADDW_R0,    ADDW_R1,    SUBW_I,     SUBW_ACC,   SUBW_R0,    SUBW_R1,
     MULW_I,     MULW_ACC,   MULW_R0,    MULW_R1,    DIVW_I,     DIVW_ACC,   DIVW_R0,    DIVW_R1,
-    JMP,        JIHL,       JHL,        JZ,         JNZ,        JC,         JNC,        JEXT,
+    JMP,        JS,         JNS,        JZ,         JNZ,        JC,         JNC,        JEXT,
     CMP_I,      CMP_ACC,    CMP_ML,     CMP_MHL,    CMP_R0,     CMP_R1,     CMP_L,      CMP_H,
     PUSH_I,     PUSH_ACC,   PUSH_R0,    PUSH_R1,    PUSH_L,     PUSH_H,     PUSH_BP,    PUSH_FLAGS,
     POP_IM,     POP_ACC,    POP_R0,     POP_R1,     POP_L,      POP_H,      POP_BP,     POP_FLAGS,
@@ -859,8 +868,8 @@ typedef enum Opcode {
     OP_DIVW_R0      = 166,
     OP_DIVW_R1      = 167,
     OP_JMP          = 168,
-    OP_JIHL         = 169,
-    OP_JHL          = 170,
+    OP_JS           = 169,
+    OP_JNS          = 170,
     OP_JZ           = 171,
     OP_JNZ          = 172,
     OP_JC           = 173,

@@ -36,6 +36,8 @@ typedef enum AssemblyToken {
     MULW_T,
     DIVW_T,
     JMP_T,
+    JS_T,
+    JNS_T,
     JZ_T,
     JNZ_T,
     JC_T,

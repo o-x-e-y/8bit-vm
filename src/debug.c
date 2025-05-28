@@ -169,8 +169,8 @@ void printOpcode(Opcode op) {
         case OP_DIVW_R0: printf("DIVW_R0"); break;
         case OP_DIVW_R1: printf("DIVW_R1"); break;
         case OP_JMP: printf("JMP"); break;
-        case OP_JIHL: printf("JIHL"); break;
-        case OP_JHL: printf("JHL"); break;
+        case OP_JS: printf("JS"); break;
+        case OP_JNS: printf("JNS"); break;
         case OP_JZ: printf("JZ"); break;
         case OP_JNZ: printf("JNZ"); break;
         case OP_JC: printf("JC"); break;
@@ -462,16 +462,16 @@ void printNextOperation(const uint8_t* memory) {
             printf("JMP, %u", (high << 8) | low);
             break;
         }
-        case OP_JIHL: {
+        case OP_JS: {
             uint16_t high = (uint16_t)*(memory + 1);
             uint16_t low = (uint16_t)*(memory + 2);
-            printf("JIHL, %u", (high << 8) | low);
+            printf("JNS, %u", (high << 8) | low);
             break;
         }
-        case OP_JHL: {
+        case OP_JNS: {
             uint16_t high = (uint16_t)*(memory + 1);
             uint16_t low = (uint16_t)*(memory + 2);
-            printf("JHL, %u", (high << 8) | low);
+            printf("JNS, %u", (high << 8) | low);
             break;
         }
         case OP_JZ: {
@@ -623,6 +623,8 @@ void printToken(void* token) {
         case MULW_T: printf("MULW_T"); break;
         case DIVW_T: printf("DIVW_T"); break;
         case JMP_T: printf("JMP_T"); break;
+        case JS_T: printf("JZ_T"); break;
+        case JNS_T: printf("JNZ_T"); break;
         case JZ_T: printf("JZ_T"); break;
         case JNZ_T: printf("JNZ_T"); break;
         case JC_T: printf("JC_T"); break;
