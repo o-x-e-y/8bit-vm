@@ -9,6 +9,12 @@
 #include "SDL3/SDL_log.h"
 #include "SDL3/SDL_render.h"
 #include "SDL3/SDL_thread.h"
+#include "headers/instructions.h"
+
+#define WRITE_IDX 0x9fed
+#define READ_IDX 0x9fee
+#define RINGBUF 0x9fef
+#define BUF_SIZE 0x0010
 
 static SDL_Window* window = NULL;
 static SDL_Renderer* renderer = NULL;
@@ -85,6 +91,107 @@ static void update_and_render(screen_buffer frame_buffer) {
     SDL_RenderPresent(renderer);
 }
 
+static char convert_input(SDL_Event* e) {
+    switch (e->key.key) {
+        case SDLK_A:
+            return 'a';
+        case SDLK_B:
+            return 'b';
+        case SDLK_C:
+            return 'c';
+        case SDLK_D:
+            return 'd';
+        case SDLK_E:
+            return 'e';
+        case SDLK_F:
+            return 'f';
+        case SDLK_G:
+            return 'g';
+        case SDLK_H:
+            return 'h';
+        case SDLK_I:
+            return 'i';
+        case SDLK_J:
+            return 'j';
+        case SDLK_K:
+            return 'k';
+        case SDLK_L:
+            return 'l';
+        case SDLK_M:
+            return 'm';
+        case SDLK_N:
+            return 'n';
+        case SDLK_O:
+            return 'o';
+        case SDLK_P:
+            return 'p';
+        case SDLK_Q:
+            return 'q';
+        case SDLK_R:
+            return 'r';
+        case SDLK_S:
+            return 's';
+        case SDLK_T:
+            return 't';
+        case SDLK_U:
+            return 'u';
+        case SDLK_V:
+            return 'v';
+        case SDLK_W:
+            return 'w';
+        case SDLK_X:
+            return 'x';
+        case SDLK_Y:
+            return 'y';
+        case SDLK_Z:
+            return 'z';
+        case SDLK_1:
+            return '1';
+        case SDLK_2:
+            return '2';
+        case SDLK_3:
+            return '3';
+        case SDLK_4:
+            return '4';
+        case SDLK_5:
+            return '5';
+        case SDLK_6:
+            return '6';
+        case SDLK_7:
+            return '7';
+        case SDLK_8:
+            return '8';
+        case SDLK_9:
+            return '9';
+        case SDLK_0:
+            return '0';
+        case SDLK_SPACE:
+            return ' ';
+        case SDLK_PERIOD:
+            return '.';
+        case SDLK_COMMA:
+            return ',';
+        case SDLK_BACKSPACE:
+            return '\b';
+        case SDLK_ESCAPE:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+static void write_input(CPU* cpu, char input) {
+    // work directly in the CPU's memory to create and manage the ringbuffer that
+    // the keyboard will use. The CPU's interrupts will also use this ringbuffer
+    // internally to process keyboard input.
+    if ((MEMORY(WRITE_IDX) + 1) % BUF_SIZE == MEMORY(READ_IDX)) {
+        printf("buffer full?");
+        return;
+    }
+    MEMORY(RINGBUF + MEMORY(WRITE_IDX)) = input;
+    MEMORY(WRITE_IDX) = (MEMORY(WRITE_IDX) + 1) % BUF_SIZE;
+}
+
 static int render_thread(void* cpuData) {
     CPU* cpu = (CPU*)cpuData;
 
@@ -98,12 +205,24 @@ static int render_thread(void* cpuData) {
     }
 
     bool quit = false;
-    SDL_Event event;
+    SDL_Event e;
+    char input;
 
     while (!quit) {
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_EVENT_QUIT) {
+        while (SDL_PollEvent(&e)) {
+            if (e.type == SDL_EVENT_KEY_DOWN) {
+                input = convert_input(&e);
+
+                // input was ESC
+                if (input == 1) {
+                    quit = true;
+                    memset(cpu->memory, OP_HALT, MEMORY_SIZE);
+                } else if (input) {
+                    write_input(cpu, input);
+                }
+            } else if (e.type == SDL_EVENT_QUIT) {
                 quit = true;
+                memset(cpu->memory, OP_HALT, MEMORY_SIZE);
             }
         }
 
