@@ -171,9 +171,9 @@ static void printWarningHelpMsg(ParserWarning warning, Token* tok) {
             uint16_t imm = parse_immediate(tok);
             uint8_t high = (imm >> 8) & 0xFF;
             uint8_t low = imm & 0xFF;
-            printf("if you meant to save a u16 integer literal, you must split it up\n");
+            printf("if you meant to save a u16 integer literal\n");
             alignWarningHelpMsgNewline(tok->char_nr, tok->substr.len);
-            printf("into two bytes: `%u %u`", high, low);
+            printf("you must split it up into two bytes: `%u %u`", high, low);
             break;
         }
     }
