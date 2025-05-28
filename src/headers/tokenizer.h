@@ -78,6 +78,7 @@ typedef enum AssemblyToken {
     HEXADECIMAL_T,
     PLUS_T,
     MINUS_T,
+    EQUALS_T,
     L_SQUARE_T,
     R_SQUARE_T,
     L_PAREN_T,

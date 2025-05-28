@@ -661,6 +661,7 @@ void printToken(void* token) {
         case HEXADECIMAL_T: printf("HEXADECIMAL_T"); break;
         case PLUS_T: printf("PLUS_T"); break;
         case MINUS_T: printf("MINUS_T"); break;
+        case EQUALS_T: printf("EQUALS_T"); break;
         case L_SQUARE_T: printf("L_SQUARE_T"); break;
         case R_SQUARE_T: printf("R_SQUARE_T"); break;
         case L_PAREN_T: printf("L_PAREN_T"); break;

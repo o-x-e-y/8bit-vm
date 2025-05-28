@@ -78,6 +78,8 @@ TokenSymbol tokenizeSymbol(str_iter_t* iter) {
             return PLUS_T;
         case '-':
             return MINUS_T;
+        case '=':
+            return EQUALS_T;
         case '[':
             return L_SQUARE_T;
         case ']':

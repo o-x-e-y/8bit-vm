@@ -727,6 +727,36 @@ static inline void parse_enter(vec_iter_t token_line) {
     }
 }
 
+static void parse_label_ref(Token* label_t, vec_iter_t token_line) {
+    Token* token = nextToken(&token_line);
+    if (token == NULL) return;
+
+    if (token->tok == EQUALS_T) {
+        token = nextToken(&token_line);
+        if (token == NULL) return;
+
+        switch (token->tok) {
+            case BINARY_T:
+            case OCTAL_T:
+            case INTEGER_T:
+            case HEXADECIMAL_T: {
+                size_t val = parse_immediate(token);
+                // label refs start with . which is included in the token substr
+                slice_t label =
+                    (slice_t){.str = label_t->substr.str + 1, .len = label_t->substr.len - 1};
+                insert_map(&assembler.label_def_map, label, val);
+                break;
+            }
+            default:
+                printError(token, UNEXPECTED_TOKEN_E, &assembler);
+        }
+    } else {
+        printError(token, UNEXPECTED_EOL_E, &assembler);
+    }
+
+    return;
+}
+
 static void assembleLinePass1(TokenLine* line) {
     assembler.line_nr = line->line_nr;
     assembler.line = line->substr;
@@ -904,6 +934,9 @@ static void assembleLinePass1(TokenLine* line) {
             insert_map(&assembler.label_def_map, label, assembler.compiled.len);
             break;
         }
+        case LABEL_REF_T:
+            parse_label_ref(token, token_line);
+            break;
         case COMMENT_T:
             break;
         // I could use `default` here but I want clang to tell me if I forgot anything
@@ -918,10 +951,10 @@ static void assembleLinePass1(TokenLine* line) {
         case PC_T:
         case FLAGS_T:
         case COMMA_T:
-        case LABEL_REF_T:
         case LABEL_IDX_T:
         case PLUS_T:
         case MINUS_T:
+        case EQUALS_T:
         case L_SQUARE_T:
         case R_SQUARE_T:
         case L_PAREN_T:
