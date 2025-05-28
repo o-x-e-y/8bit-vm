@@ -75,11 +75,11 @@ Assembler assembler;
         PUSH_OP(OP_##op##_##dst); \
         break;
 
-static void initAssembler(Assembler* assembler, slice_t filename) {
+static void initAssembler(Assembler* assembler, slice_t filename, TokenLines token_lines) {
     assembler->path = filename;
     assembler->line_nr = 0;
     assembler->line = (slice_t){.str = NULL, .len = 0};
-    assembler->token_lines = new_vec(10, sizeof(TokenLine));
+    assembler->token_lines = token_lines.lines;
     assembler->label_ref_list = new_vec(10, sizeof(LabelRef));
     assembler->label_def_map = new_map();
     assembler->compiled = new_vec(PROGRAM_START + 100, sizeof(uint8_t));
@@ -967,10 +967,8 @@ static void assembleLinePass1(TokenLine* line) {
 
 /// Compile the assembled tokens into an executable with placeholder zeroes in place of labeled
 /// jumps and memory access. Those will be filled out in pass 2.
-static void assemblePass1(TokenLines lines) {
-    assembler.token_lines = lines.lines;
-
-    vec_iter_t token_lines = iter_from_vec(&lines.lines);
+static void assemblePass1() {
+    vec_iter_t token_lines = iter_from_vec(&assembler.token_lines);
     TokenLine* line;
 
     while ((line = iter_next(&token_lines))) {
@@ -1014,12 +1012,11 @@ static void assemblePass2() {
 }
 
 Executable assemble(slice_t program, slice_t filename) {
-    initAssembler(&assembler, filename);
-
     TokenLines lines = tokenizeProgram(program);
 
-    assemblePass1(lines);
+    initAssembler(&assembler, filename, lines);
 
+    assemblePass1();
     assemblePass2();
 
     Executable exec =
