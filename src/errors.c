@@ -236,6 +236,8 @@ void printHighlightedLine(Assembler* assembler, bool darken) {
 
         printf("%.*s" RESET, (int)token->substr.len, token->substr.str);
     }
+
+    free_vec(&line.tokens, NULL);
 }
 
 static void printNumberedHighlightedLine(Assembler* assembler, bool darken) {
