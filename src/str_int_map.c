@@ -71,9 +71,7 @@ size_t* get_map(const si_map_t* map, slice_t key) {
 
 static bool insert_bucket(si_bucket_t* bucket, slice_t key, size_t value) {
     if (bucket == NULL) {
-        slice_t new = (slice_t){.str = strndup(key.str, key.len), .len = key.len};
-        *bucket = (si_bucket_t){.key = new, .value = value, .prev = NULL, .next = NULL};
-        return true;
+        return false;
     }
 
     do {
@@ -94,6 +92,7 @@ static bool insert_bucket(si_bucket_t* bucket, slice_t key, size_t value) {
             new->value = value;
 
             new->prev = bucket;
+            new->next = NULL;
             bucket->next = new;
 
             return true;
@@ -140,34 +139,46 @@ static bool remove_bucket(si_bucket_t* bucket, slice_t key) {
         return false;
     }
 
-    do {
-        if (bucket->key.str == NULL) {
+    si_bucket_t* current = bucket;
+    while (current != NULL) {
+        if (current->key.str == NULL) {
             printf("key is null while trying to remove something\n");
             return false;
         }
-        if (cmp_str(bucket->key, key) == 0) {
-            free((void*)bucket->key.str);
-            free(bucket);
-            bucket = NULL;
-
-            if (bucket->prev == NULL) {
-                if (bucket->next != NULL) {
-                    bucket->key = bucket->next->key;
-                    bucket->value = bucket->next->value;
-                    bucket->next = bucket->next->next;
+        if (cmp_str(current->key, key) == 0) {
+            if (current->prev == NULL) {
+                // Head node removal
+                if (current->next == NULL) {
+                    // Only node in chain
+                    free((void*)current->key.str);
+                    current->key.str = NULL;
+                    current->key.len = 0;
+                    current->value = 0;
+                } else {
+                    // Replace head with next node
+                    si_bucket_t* next_node = current->next;
+                    free((void*)current->key.str);
+                    current->key = next_node->key;
+                    current->value = next_node->value;
+                    current->next = next_node->next;
+                    if (next_node->next) {
+                        next_node->next->prev = current;
+                    }
+                    free(next_node);
                 }
             } else {
-                // if bucket->prev isn't NULL
-                bucket->prev->next = bucket->next;
-
-                if (bucket->next != NULL) {
-                    bucket->next->prev = bucket->prev;
+                // Non-head node removal
+                current->prev->next = current->next;
+                if (current->next) {
+                    current->next->prev = current->prev;
                 }
+                free((void*)current->key.str);
+                free(current);
             }
-
             return true;
         }
-    } while ((bucket = bucket->next));
+        current = current->next;
+    }
 
     printf("Went through bucket without finding anything\n");
     return false;
@@ -187,11 +198,20 @@ void clear_map(si_map_t* map) {
 static void free_bucket(si_bucket_t* bucket) {
     assert(bucket != NULL);
 
-    do {
-        if (bucket->key.str != NULL) {
-            free((void*)bucket->key.str);
+    si_bucket_t* current = bucket->next;
+    while (current != NULL) {
+        si_bucket_t* next = current->next;
+        if (current->key.str != NULL) {
+            free((void*)current->key.str);
         }
-    } while ((bucket = bucket->next));
+        free(current);
+        current = next;
+    }
+
+    if (bucket->key.str != NULL) {
+        free((void*)bucket->key.str);
+        bucket->key.str = NULL;
+    }
 }
 
 void free_map(si_map_t* map) {
@@ -206,7 +226,9 @@ void free_map(si_map_t* map) {
     }
 
     free(map->buckets);
-    map = NULL;
+    map->buckets = NULL;
+    map->capacity = 0;
+    map->len = 0;
 }
 
 si_map_iter_t iter_from_map(const si_map_t* map) {
