@@ -13,6 +13,7 @@ src-folder := ./src
 test-folder := ./tests
 headers := ./src/headers
 
+CC = zig cc
 SDL_CFLAGS ?= $(shell pkg-config --cflags sdl3)
 SDL_LIBS ?= $(shell pkg-config --libs sdl3)
 
@@ -34,23 +35,23 @@ $(shell mkdir -p $(obj-path) $(test-obj-path) $(release-obj-path))
 
 # create objs with release flags
 $(release-obj-path)/%.o: $(src-folder)/%.c
-	cc $(release-flags) -I$(headers) -c $< -o $@
+	$(CC) $(release-flags) -I$(headers) -c $< -o $@
 
 # create objs with debug flags
 $(obj-path)/%.o: $(src-folder)/%.c
-	cc $(debug-flags) -I$(headers) -c $< -o $@
+	$(CC) $(debug-flags) -I$(headers) -c $< -o $@
 
 # create test objs
 $(test-obj-path)/%.o: $(test-folder)/%.c
-	cc $(debug-flags) -I$(headers) -I$(test-folder) -c $< -o $@
+	$(CC) $(debug-flags) -I$(headers) -I$(test-folder) -c $< -o $@
 	
 # build release executable
 $(release-exec-path): $(release-objs)
-	cc $(release-flags) $^ -o $@
+	$(CC) $(release-flags) $^ -o $@
 
 # build debug executable
 $(exec-path): $(src-objs)
-	cc $(debug-flags) $^ -o $@
+	$(CC) $(debug-flags) $^ -o $@
 
 # build test executable
 $(test-exec-path): $(test-objs) $(src-objs-no-main)

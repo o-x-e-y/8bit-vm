@@ -2,11 +2,11 @@
 
 pkgs.mkShell {
   buildInputs = with pkgs; [
-    gcc
     valgrind
     clang-tools
     sdl3
     pkg-config
+    zig
   ];
 
   shellHook = ''
