@@ -20,7 +20,7 @@
 static SDL_Window* window = NULL;
 static SDL_Renderer* renderer = NULL;
 static SDL_Texture* texture = NULL;
-static uint32_t* rgba_buffer = NULL;
+static uint32_t rgba_buffer[SCREEN_WIDTH * SCREEN_HEIGHT] = {0};
 
 static const uint32_t colors[16] = {
     0x282828FF,  // GRUVBOX_BLACK
@@ -67,8 +67,6 @@ static SDL_AppResult initialize_sdl() {
 
     SDL_SetRenderScale(renderer, PIXEL_SCALE, PIXEL_SCALE);
     SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
-    
-    rgba_buffer = calloc(SCREEN_WIDTH * SCREEN_HEIGHT, sizeof(uint32_t));
 
     return SDL_APP_CONTINUE;
 }
