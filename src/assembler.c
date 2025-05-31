@@ -222,6 +222,8 @@ static MemExpr parse_mem_addr(Token* prev_token, vec_iter_t token_line) {
         default:
             assert(0 && "unreachable");
     }
+
+    return (MemExpr){0};
 }
 
 static inline void parse_load_imm(Token* token) {
