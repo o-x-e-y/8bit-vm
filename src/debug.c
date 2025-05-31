@@ -528,7 +528,7 @@ void printNextOperation(const uint8_t* memory) {
         case OP_POP_L: printf("POP_L"); break;
         case OP_POP_H: printf("POP_H"); break;
         case OP_POP_BP: printf("POP_BP"); break;
-        case OP_POP_FLAGS: printf("POP_F"); break;
+        case OP_POP_FLAGS: printf("POP_FLAGS"); break;
         case OP_CALL: {
             uint16_t high = (uint16_t)*(memory + 1);
             uint16_t low = (uint16_t)*(memory + 2);
