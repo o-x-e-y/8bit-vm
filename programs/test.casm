@@ -1,0 +1,28 @@
+ET
+
+main:
+    INC counter[2]
+    LOAD 0
+    ADC counter[1]
+    STORE counter[1]
+    LOAD 0
+    ADC counter[0]
+    STORE counter[0]
+    
+    LOAD counter[0]
+    PUSH ACC
+    LOAD counter[1]
+    PUSH ACC
+    LOAD counter[2]
+    PUSH ACC
+    
+    LOAD counter[0]
+    CMP 
+    
+    POP ACC
+    POP ACC
+    POP ACC
+    JMP .main
+   
+counter:
+    255 255 254
