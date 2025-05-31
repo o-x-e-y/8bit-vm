@@ -3,9 +3,20 @@ STORE R0
 LOAD 5
 STORE R1
 
-CALL .print_caret
+; CALL .print_caret
 
 main:
+    INC show_caret[2]
+    LOAD 0
+    ADC show_caret[1]
+    STORE show_caret[1]
+    LOAD 0 ; doesn't overwrite possible carry flag
+    ADC show_caret[0] ; high byte
+    AND 0x02
+    STORE show_caret[0]
+    
+    CALL .print_caret
+    
     CALL .get_keyboard
     CMP 0
     JZ .main ; no keystrokes to process
@@ -14,7 +25,16 @@ main:
     JZ .backspace
     
     CMP 32 ; cmp with space
-    JZ .caret_right ; just move along if space is encountered
+    JZ .print_space
+    
+    CMP 39 ; cmp with apostrophe
+    JZ .print_apostrophe
+    
+    CMP 44 ; cmp with comma
+    JZ .print_comma
+    
+    CMP 46 ; cmp with period
+    JZ .print_period
 
     SUB 97 ; ascii value of 'a'
     STORE L
@@ -33,7 +53,7 @@ main:
         
         ADD 3 ; move caret 3 to the right
         STORE R1
-        CALL .print_caret
+        ; CALL .print_caret
         
         JMP .main
         
@@ -41,9 +61,9 @@ main:
         LOAD 5
         STORE R1
         LOAD R0
-        ADD 6
+        ADD 8
         STORE R0
-        CALL .print_caret
+        ; CALL .print_caret
         
         JMP .main
     
@@ -61,7 +81,7 @@ main:
         STORE R1
         
         print_backspace:
-            ADD text_empty[0]
+            ADD text_caret[0]
             PUSH R0
             PUSH R1
             CALL .print_letter
@@ -72,12 +92,34 @@ main:
         CMP 10
         JZ .main
         
-        SUB 6
+        SUB 8
         STORE R0
         LOAD 122
         STORE R1
         JMP .print_backspace        
-
+    
+    print_space:
+        ADD text_empty[0]
+        JMP .print
+        
+    print_apostrophe:
+        ADD text_apostrophe[0]
+        JMP .print
+        
+    print_comma:
+        ADD text_comma[0]
+        JMP .print
+    
+    print_period:
+        ADD text_period[0]
+        JMP .print
+        
+    print:
+        PUSH R0
+        PUSH R1
+        CALL .print_letter
+        JMP .caret_right
+        
 ; get keyboard input from circular buffer. Result in ACC
 get_keyboard:
     LOAD read_idx[0]
@@ -100,18 +142,23 @@ get_keyboard:
         RET
         
 print_caret:
-    ADD text_caret[0]
-    PUSH R0
-    PUSH R1
-    CALL .print_letter
-    RET
+    LOAD show_caret[0]
+    CMP 0x01
+    JS .print_caret_real
     
-print_space:
-    ADD text_empty[0]
-    PUSH R0
-    PUSH R1
-    CALL .print_letter
-    RET
+    print_empty:
+        ADD text_empty[0]
+        PUSH R0
+        PUSH R1
+        CALL .print_letter
+        RET
+    
+    print_caret_real:
+        ADD text_caret[0]
+        PUSH R0
+        PUSH R1
+        CALL .print_letter
+        RET
 
 ; print 6x5 letter, memory location in HL, x, y on stack
 print_letter:
@@ -685,64 +732,23 @@ text_caret:
     0x00 0x00 0x00
     0x00 0x00 0x00
     0x00 0x00 0x00
-    
     0x03 0x33 0x30
-
-; text_a:
-;     0x03 0x33 0x00
-;     0x30 0x00 0x30
-;     0x33 0x33 0x30
-;     0x30 0x00 0x30
-;     0x30 0x00 0x30
-;     
-; text_b:
-;     0x33 0x33 0x00
-;     0x30 0x00 0x30
-;     0x33 0x33 0x00
-;     0x30 0x00 0x30
-;     0x33 0x33 0x00
-;     
-; text_c:
-;     0x03 0x33 0x30
-;     0x30 0x00 0x00
-;     0x30 0x00 0x00
-;     0x30 0x00 0x00
-;     0x03 0x33 0x30
-;     
-; text_d:
-;     0x33 0x33 0x00
-;     0x30 0x00 0x30
-;     0x30 0x00 0x30
-;     0x30 0x00 0x30
-;     0x33 0x33 0x00
-;     
-; text_e:
-;     0x33 0x33 0x30
-;     0x30 0x00 0x00
-;     0x33 0x33 0x00
-;     0x30 0x00 0x00
-;     0x33 0x33 0x30
-; 
-; text_o:
-;     0x03 0x33 0x00
-;     0x30 0x00 0x30
-;     0x30 0x00 0x30
-;     0x30 0x00 0x30
-;     0x03 0x33 0x00
-; 
-; text_x:
-;     0x30 0x00 0x30
-;     0x03 0x03 0x00
-;     0x00 0x30 0x00
-;     0x03 0x03 0x00
-;     0x30 0x00 0x30
-; 
-; text_y:
-;     0x30 0x00 0x30
-;     0x03 0x03 0x00
-;     0x00 0x30 0x00
-;     0x00 0x30 0x00
-;     0x00 0x30 0x00
+    
+text_period:
+    0x00 0x00 0x00
+text_comma:
+    0x00 0x00 0x00
+    0x00 0x00 0x00
+    0x00 0x00 0x00
+text_apostrophe:
+    0x03 0x00 0x00
+    0x03 0x00 0x00
+    0x00 0x00 0x00
+    0x00 0x00 0x00
+    0x00 0x00 0x00
+    
+show_caret:
+    0 0 0 0
     
 .write_idx = 0x9fed
 .read_idx = 0x9fee

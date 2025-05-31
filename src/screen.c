@@ -171,6 +171,8 @@ static char convert_input(SDL_Event* e) {
             return '.';
         case SDLK_COMMA:
             return ',';
+        case SDLK_APOSTROPHE:
+            return '\'';
         case SDLK_BACKSPACE:
             return '\b';
         case SDLK_ESCAPE:
