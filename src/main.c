@@ -16,8 +16,6 @@ int main(int argc, char** argv) {
         CPU cpu;
         initCpu(&cpu);
 
-        initScreen(&cpu);
-
         const char* filename = argv[1];
         const string_t programStr = read_file_to_str(filename);
         const Executable exec =
@@ -26,8 +24,7 @@ int main(int argc, char** argv) {
         printf("created executable with size %lu\n", exec.size - PROGRAM_START);
 
         loadProgram(&cpu, exec.executable, exec.size);
-
-        runCpu(&cpu);
+        initScreen(&cpu);
 
         printCpu(&cpu);
         printStack(&cpu, 10);

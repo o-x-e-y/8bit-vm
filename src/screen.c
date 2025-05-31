@@ -236,8 +236,16 @@ static int render_thread(void* cpuData) {
     return SDL_APP_SUCCESS;
 }
 
+int runCpuSdl(void* cpuData) {
+    CPU* cpu = (CPU*)cpuData;
+
+    return runCpu(cpu);
+}
+
 void initScreen(CPU* cpu) {
-    SDL_Thread* screen_thread_handle = SDL_CreateThread(render_thread, "SDL VM Screen Thread", cpu);
+    SDL_Thread* screen_thread_handle = SDL_CreateThread(runCpuSdl, "SDL VM CPU Thread", cpu);
 
     SDL_DetachThread(screen_thread_handle);
+
+    render_thread(cpu);
 }
