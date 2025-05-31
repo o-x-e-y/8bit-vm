@@ -34,6 +34,7 @@ INSTRUCTION(DT) {
 INSTRUCTION(CLRA) {
     PC++;
     ACC = 0;
+    FLAGS = set_zf(FLAGS);
 }
 INSTRUCTION(RESET) { resetCpu(cpu); }
 
@@ -108,14 +109,14 @@ ADD(R1, PC += 1, R1)
 ADD(L, PC += 1, L)
 ADD(H, PC += 1, H)
 
-#define ADC(variation, pc_inc, src)       \
-    INSTRUCTION(ADC_##variation) {        \
-        pc_inc;                           \
-        uint8_t val = src + CARRY_FLAG(); \
-        ACC += val;                       \
-        UPDATE_ZF(ACC);                   \
-        UPDATE_SF(ACC);                   \
-        UPDATE_FLAGS(ACC < val, cf);      \
+#define ADC(variation, pc_inc, src)                \
+    INSTRUCTION(ADC_##variation) {                 \
+        pc_inc;                                    \
+        uint16_t total = ACC + src + CARRY_FLAG(); \
+        ACC = (uint8_t)total;                      \
+        UPDATE_ZF(ACC);                            \
+        UPDATE_SF(ACC);                            \
+        UPDATE_FLAGS(total >= 256, cf);            \
     }
 
 ADC(I, PC += 2, MEMORY(PC - 1))
@@ -146,14 +147,15 @@ SUB(R1, PC += 1, R1)
 SUB(L, PC += 1, L)
 SUB(H, PC += 1, H)
 
-#define SBC(variation, pc_inc, src)             \
-    INSTRUCTION(SBC_##variation) {              \
-        pc_inc;                                 \
-        uint8_t val = src - (1 - CARRY_FLAG()); \
-        ACC -= val;                             \
-        UPDATE_ZF(ACC);                         \
-        UPDATE_SF(ACC);                         \
-        UPDATE_FLAGS(ACC > val, cf);            \
+#define SBC(variation, pc_inc, src)                        \
+    INSTRUCTION(SBC_##variation) {                         \
+        pc_inc;                                            \
+        uint16_t old_acc = ACC;                            \
+        uint16_t val = (uint16_t)src - (1 - CARRY_FLAG()); \
+        ACC -= (uint8_t)val;                               \
+        UPDATE_ZF(ACC);                                    \
+        UPDATE_SF(ACC);                                    \
+        UPDATE_FLAGS(old_acc >= val, cf);                  \
     }
 
 SBC(I, PC += 2, MEMORY(PC - 1))
@@ -548,7 +550,11 @@ POP(R1, PC += 1, R1)
 POP(L, PC += 1, L)
 POP(H, PC += 1, H)
 POP(BP, PC += 1, BP)
-POP(FLAGS, PC += 1, FLAGS)
+INSTRUCTION(POP_FLAGS) {
+    PC += 1;
+    uint8_t val = STACK(--SP);
+    FLAGS = val;
+}
 
 INSTRUCTION(CALL) {
     PC += 3;
