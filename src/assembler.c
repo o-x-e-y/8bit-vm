@@ -309,7 +309,7 @@ static inline void parse_load_imm(Token* token) {
                 break;                                                          \
             case BP_MM:                                                         \
                 PUSH_OP(OP_##op##_BPI);                                         \
-                PUSH_IMM8(expr.addr);                                           \
+                PUSH_IMM8(expr.addr + 1);                                       \
                 break;                                                          \
         }                                                                       \
     }; break;
