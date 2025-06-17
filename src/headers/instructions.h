@@ -577,14 +577,14 @@ INSTRUCTION(RET_I) {
 }
 INSTRUCTION(ENTER) {
     PC += 2;
-    BP = SP;
     STACK(SP++) = BP;
+    BP = SP;
     SP += MEMORY(PC - 1);  // space for local variables
 }
 INSTRUCTION(LEAVE) {
     PC++;
-    // BP = STACK(--SP);
-    SP = STACK(BP);
+    SP = BP;
+    BP = STACK(--SP);
 }
 INSTRUCTION(ADD_L_I) {
     PC += 2;
