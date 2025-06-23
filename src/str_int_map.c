@@ -119,8 +119,6 @@ bool insert_map(si_map_t* map, slice_t key, size_t value) {
             } while ((bucket = bucket->next));
         }
 
-        printf("growing\n");
-
         free_map(map);
         *map = new;
     }
