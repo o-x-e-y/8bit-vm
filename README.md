@@ -1,14 +1,14 @@
 # 8-bit VM
 
-Open learning personal project. My goal is to create an emulator based on a custom designed CPU spec, then write a playable game for it.
+Fontys Open Learning personal project. The goal was to create an entirely custom 8-bit virtual machine to emulate a gaming console, then write a game for it. As it stands, the project contains a functioning assembler and some example programs in `./programs`.
 
 ## Requirements
 
-* SDL3
-* pkg-config to handle inclusion of the right headers and libraries when building
+* [SDL3](https://wiki.libsdl.org/SDL3/FrontPage),
+* [pkg-config](https://www.freedesktop.org/wiki/Software/pkg-config/) to handle inclusion of the right headers and libraries when building,
 * GCC or any other c compiler exposed as `cc`
 
-If you're using Nix, simply run `nix-shell` to enter an environment where everything is set for you.
+If you're using Nix, simply run `nix-shell` to enter an environment where everything is readily set up for you.
 
 ## Usage
 
